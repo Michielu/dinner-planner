@@ -91,30 +91,57 @@ No backend code to write. The Supabase JS client talks directly to the database 
 ## App Flow
 
 ```
-Pantry Input → Week Planner → (click slot) → Recipe Picker → Grocery List
+Staple Check → Pantry Input → Week Planner → (click slot) → Recipe Picker → Grocery List
 ```
 
-### ① Pantry Input
-First screen of every planning session. A searchable selector that pulls from the global `ingredients` catalog. She taps/clicks to toggle ingredients on or off (selected items appear as chips). A search box filters the list. An "Add new ingredient" option at the bottom lets her add items not yet in the catalog (name + store). Selected items are not saved to the DB — held in React state for the session only.
+### ① Staple Check
+First step when starting a planning session. Shows the full `staple_items` list as a scrollable tap-to-toggle selector. She checks off which staples to include on this week's grocery list. An inline "Add new staple" form (name + store) expands at the bottom of the list — lets her add new staples without leaving the flow; newly added items are immediately selected and persisted to the DB. Selected staples flow into the grocery list generator; held in React state for the session only (not re-saved).
 
-### ② Week Planner
+### ② Pantry Input
+A searchable selector that pulls from the global `ingredients` catalog. She taps/clicks to toggle ingredients on or off (selected items appear as chips). A search box filters the list. An inline "Add new ingredient" form (name + store) expands at the bottom — lets her add catalog items on the fly; newly added items are immediately selected and persisted to the DB. Selected items are held in React state for the session only.
+
+### ③ Week Planner
 Shows 7 day slots (Mon–Sun), all equal. No pre-assigned types. She clicks any slot to open the Recipe Picker. Default is all slots empty. "Generate Grocery List" button activates once she's happy (not gated on all slots being filled — she may leave some empty intentionally).
 
-### ③ Recipe Picker
+### ④ Recipe Picker
 Slides in as a panel. Contains:
-- **Quick options at top:** "🍽️ Eating Out" and "🎲 Flex Night" — one click to assign, no ingredients added to grocery list
-- **Category filter chips:** All / Fry Pan / Pasta / Slow Cooker / (etc.)
+- **Search bar** at the top — filters the recipe list by name as she types
+- **Quick options:** "🍽️ Eating Out" and "🎲 Flex Night" — one click to assign, no ingredients added to grocery list
+- **Category filter chips:** All / Pasta / Asian / Mexican / Sheet Pan / Crock Pot
 - **Recipe list:** Recipes matching pantry ingredients are **highlighted** at the top; others shown below in normal style
+- **"+ Add new recipe" dashed button** at the bottom of the list — navigates to `/recipes` so she can add the recipe, then return to planning
 
-### ④ Grocery List
+### ⑤ Grocery List
 Generated on demand. Logic:
 1. Collect all `recipe_ingredients` from the selected meals (skip Eating Out / Flex slots)
-2. Deduplicate by ingredient name
-3. Append all `staple_items`
-4. Group by store → three columns: Sam's Club / Aldi / Target
-5. Staples shown with a ★ and "check if needed" note
+2. Deduplicate by ingredient id
+3. Each ingredient item shows which meals it's used in (e.g., "Pasta Bolognese, Stir Fry")
+4. Append selected staple items (marked with ★)
+5. Group by store → three columns: Sam's Club / Aldi / Target
 
 Displayed in-app with a "Copy list" button. Not saved to the DB.
+
+---
+
+## Design System
+
+Sweetgreen-inspired aesthetic. All UI uses these design tokens:
+
+| Token | Value | Usage |
+|---|---|---|
+| Field Cream | `#f4f3e7` | Page background |
+| Willow Mist | `#d8e5d6` | Cards, selector lists |
+| Grain Sand | `#e8dcc6` | Secondary cards, recipe picker background |
+| Soil Shadow | `#0e150e` | Primary text |
+| Stone Grey | `#8c8c82` | Muted text, labels |
+| Garden Patch | `#00473c` | Nav, section labels, filter chips (filled) |
+| Fresh Herb | `#7aaa6a` | Accent — primary buttons, selected chips, highlights |
+
+**Typography:** Montserrat 200-weight for display headings; Inter 400/700 for body. Both loaded from Google Fonts via `<link>` in `index.html`.
+
+**Shapes:** 24px radius for main cards; 1000px (pill) for buttons; 16px for inner elements. Box shadow: `rgba(14,21,14,0.4) 3px 3px 32px -10px`.
+
+All Tailwind classes for these tokens are defined as custom colors in `tailwind.config.js` (e.g., `bg-field-cream`, `text-soil-shadow`, `bg-fresh-herb`).
 
 ---
 

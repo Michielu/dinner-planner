@@ -40,7 +40,7 @@ npm install -D tailwindcss autoprefixer postcss vitest @vitest/coverage-v8
 npx tailwindcss init -p
 ```
 
-- [ ] **Step 3: Configure Tailwind**
+- [ ] **Step 3: Configure Tailwind with Sweetgreen design tokens**
 
 Replace `tailwind.config.js` with:
 
@@ -48,7 +48,30 @@ Replace `tailwind.config.js` with:
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
-  theme: { extend: {} },
+  theme: {
+    extend: {
+      colors: {
+        'field-cream':  '#f4f3e7',  // page background
+        'willow-mist':  '#d8e5d6',  // cards, selector lists
+        'grain-sand':   '#e8dcc6',  // secondary cards
+        'soil-shadow':  '#0e150e',  // primary text
+        'stone-grey':   '#8c8c82',  // muted text / labels
+        'garden-patch': '#00473c',  // nav, section labels
+        'fresh-herb':   '#7aaa6a',  // accent — buttons, selected states
+      },
+      fontFamily: {
+        display: ['Montserrat', 'sans-serif'],
+        body:    ['Inter', 'sans-serif'],
+      },
+      borderRadius: {
+        'card': '24px',
+        'pill': '1000px',
+      },
+      boxShadow: {
+        'card': 'rgba(14,21,14,0.4) 3px 3px 32px -10px',
+      },
+    },
+  },
   plugins: [],
 }
 ```
@@ -70,7 +93,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 5: Add Tailwind directives to CSS**
+- [ ] **Step 5: Add Tailwind directives to CSS and Google Fonts**
 
 Replace the contents of `src/index.css` with:
 
@@ -78,6 +101,20 @@ Replace the contents of `src/index.css` with:
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f4f3e7;
+  color: #0e150e;
+}
+```
+
+Add Google Fonts to `index.html` inside `<head>`:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@200;400&display=swap" rel="stylesheet">
 ```
 
 - [ ] **Step 6: Create .env.local for Supabase credentials**
@@ -201,7 +238,7 @@ git commit -m "feat: supabase schema — 5 tables with seed categories"
 - Create: `tests/utils/groceryList.test.js`
 - Create: `src/utils/groceryList.js`
 
-The grocery list generator is the core business logic. It takes planned slots, a recipe map, and staples, and returns items grouped by store. It must deduplicate ingredients (same ingredient used in two recipes appears once) and always include staples.
+The grocery list generator is the core business logic. It takes planned slots, a recipe map, and staples, and returns items grouped by store. It must deduplicate ingredients (same ingredient used in two recipes appears once), track which meals each ingredient belongs to, and always include staples.
 
 - [ ] **Step 1: Write failing tests**
 
@@ -258,6 +295,18 @@ describe('generateGroceryList', () => {
     const result = generateGroceryList(slots, RECIPES, [])
     const aldiNames = result.aldi.map(i => i.name)
     expect(aldiNames.filter(n => n === 'pasta')).toHaveLength(1)
+  })
+
+  it('tracks meals for each ingredient', () => {
+    const slots = [
+      { day: 'monday', type: 'recipe', recipeId: 'r1' },
+      { day: 'tuesday', type: 'recipe', recipeId: 'r2' },
+    ]
+    const result = generateGroceryList(slots, RECIPES, [])
+    const pasta = result.aldi.find(i => i.name === 'pasta')
+    expect(pasta.meals).toEqual(expect.arrayContaining(['Pasta Bolognese', 'Chicken Stir Fry']))
+    const beef = result.sams_club.find(i => i.name === 'ground beef')
+    expect(beef.meals).toEqual(['Pasta Bolognese'])
   })
 
   it('skips eating_out and flex slots', () => {
@@ -318,30 +367,36 @@ Create `src/utils/groceryList.js`:
  * @param {Array<{id: string, name: string, ingredients: Array<{id: string, name: string, store: string}>}>} recipes
  * @param {Array<{id: string, name: string, store: string, notes: string|null}>} staples
  * @returns {{sams_club: Array, aldi: Array, target: Array}}
+ *   Each recipe item: {name, store, isStaple: false, meals: string[]}
+ *   Each staple item:  {name, store, isStaple: true, notes: string|null}
  */
 export function generateGroceryList(slots, recipes, staples) {
   const recipeMap = new Map(recipes.map(r => [r.id, r]))
 
-  // Collect unique ingredients from planned recipe slots
-  const ingredientMap = new Map() // ingredient id → {name, store, isStaple}
+  // ingredient id → {name, store, meals: string[]}
+  const ingredientMap = new Map()
+
   for (const slot of slots) {
     if (slot.type !== 'recipe' || !slot.recipeId) continue
     const recipe = recipeMap.get(slot.recipeId)
     if (!recipe) continue
     for (const ing of recipe.ingredients) {
       if (!ingredientMap.has(ing.id)) {
-        ingredientMap.set(ing.id, { name: ing.name, store: ing.store, isStaple: false })
+        ingredientMap.set(ing.id, { name: ing.name, store: ing.store, meals: [] })
+      }
+      const entry = ingredientMap.get(ing.id)
+      if (!entry.meals.includes(recipe.name)) {
+        entry.meals.push(recipe.name)
       }
     }
   }
 
-  // Start result with recipe ingredients
   const result = { sams_club: [], aldi: [], target: [] }
+
   for (const item of ingredientMap.values()) {
-    result[item.store].push({ name: item.name, isStaple: false })
+    result[item.store].push({ name: item.name, isStaple: false, meals: item.meals })
   }
 
-  // Append staples
   for (const staple of staples) {
     result[staple.store].push({ name: staple.name, isStaple: true, notes: staple.notes ?? null })
   }
@@ -356,7 +411,7 @@ export function generateGroceryList(slots, recipes, staples) {
 npx vitest run tests/utils/groceryList.test.js
 ```
 
-Expected: 6 tests pass, 0 failures.
+Expected: 7 tests pass, 0 failures.
 
 - [ ] **Step 5: Commit**
 
@@ -764,10 +819,10 @@ function NavItem({ to, label }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+        `px-4 py-2 rounded-pill text-sm font-bold tracking-wide transition-colors ${
           isActive
-            ? 'bg-indigo-600 text-white'
-            : 'text-gray-600 hover:bg-gray-100'
+            ? 'bg-garden-patch text-fresh-herb'
+            : 'text-stone-grey hover:text-soil-shadow'
         }`
       }
     >
@@ -778,13 +833,15 @@ function NavItem({ to, label }) {
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-field-cream font-body text-soil-shadow">
       <ConnectionBanner />
-      <nav className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-2">
-        <span className="text-lg font-bold text-indigo-600 mr-4">🍽️ Dinner Planner</span>
+      <nav className="bg-willow-mist shadow-card px-6 py-4 flex items-center gap-3">
+        <span className="font-display font-light text-2xl tracking-tight text-garden-patch mr-4">
+          Dinner Planner
+        </span>
         <NavItem to="/" label="This Week" />
         <NavItem to="/recipes" label="Recipes" />
-        <NavItem to="/manage" label="Staples &amp; Categories" />
+        <NavItem to="/manage" label="Staples & Categories" />
       </nav>
       <main className="max-w-4xl mx-auto">
         <Routes>
@@ -1371,13 +1428,152 @@ git commit -m "feat: recipes page with ingredient autocomplete and catalog persi
 ## Task 8: Planner Page — Full Planning Flow
 
 **Files:**
+- Create: `src/components/StapleChecker.jsx`
 - Create: `src/components/PantryInput.jsx`
 - Create: `src/components/WeekGrid.jsx`
 - Create: `src/components/RecipePicker.jsx`
 - Create: `src/components/GroceryList.jsx`
 - Modify: `src/pages/PlannerPage.jsx`
 
-- [ ] **Step 1: Create PantryInput component**
+- [ ] **Step 1: Create StapleChecker component**
+
+This is the first step in the planning flow. She sees all staple items as a tap-to-toggle list, checks off what she needs this week, and can add new staples inline.
+
+Create `src/components/StapleChecker.jsx`:
+
+```jsx
+import { useState } from 'react'
+import { useStaples } from '../hooks/useStaples'
+
+const STORES = [
+  { value: 'sams_club', label: "Sam's Club" },
+  { value: 'aldi', label: 'Aldi' },
+  { value: 'target', label: 'Target' },
+]
+
+/**
+ * Props:
+ *   onNext: (selectedStaples: Array<{id, name, store, notes}>) => void
+ */
+export function StapleChecker({ onNext }) {
+  const { staples, addStaple } = useStaples()
+  const [selected, setSelected] = useState([]) // Array<{id, name, store, notes}>
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newStore, setNewStore] = useState('aldi')
+  const [saving, setSaving] = useState(false)
+
+  function isSelected(id) {
+    return selected.some(s => s.id === id)
+  }
+
+  function toggle(staple) {
+    setSelected(prev =>
+      isSelected(staple.id)
+        ? prev.filter(s => s.id !== staple.id)
+        : [...prev, staple]
+    )
+  }
+
+  async function handleAddNew(e) {
+    e.preventDefault()
+    if (!newName.trim()) return
+    setSaving(true)
+    try {
+      await addStaple({ name: newName.trim(), store: newStore, notes: null })
+      // After addStaple, useStaples refreshes. The new staple will appear in the list.
+      // We auto-select it by finding it after the list updates.
+      // For immediate feedback, add a placeholder to selected; it gets reconciled on re-render.
+      setNewName('')
+      setNewStore('aldi')
+      setAdding(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto mt-16 bg-willow-mist rounded-card p-8 shadow-card">
+      <p className="text-xs font-bold tracking-widest uppercase text-garden-patch mb-1">Step 1 of 2</p>
+      <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow mb-1">Staple check</h2>
+      <p className="text-sm text-stone-grey mb-6">Check off what you need this week.</p>
+
+      {/* Staple list */}
+      <div className="bg-field-cream rounded-2xl overflow-hidden mb-5 max-h-72 overflow-y-auto">
+        {staples.length === 0 && !adding && (
+          <p className="px-4 py-4 text-sm text-stone-grey">No staples yet — add some below.</p>
+        )}
+        {staples.map(staple => (
+          <button
+            key={staple.id}
+            onClick={() => toggle(staple)}
+            className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm border-b border-willow-mist last:border-0 transition-colors ${
+              isSelected(staple.id) ? 'bg-fresh-herb/20' : 'hover:bg-willow-mist/50'
+            }`}
+          >
+            <div>
+              <span className="font-bold text-soil-shadow">{staple.name}</span>
+              <span className="text-xs text-stone-grey ml-2">{STORES.find(s => s.value === staple.store)?.label}</span>
+              {staple.notes && <span className="text-xs text-stone-grey ml-1">— {staple.notes}</span>}
+            </div>
+            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center text-xs shrink-0 transition-colors ${
+              isSelected(staple.id) ? 'bg-fresh-herb border-fresh-herb text-soil-shadow' : 'border-stone-grey/40'
+            }`}>
+              {isSelected(staple.id) && '✓'}
+            </div>
+          </button>
+        ))}
+
+        {/* Add new staple */}
+        {!adding ? (
+          <button
+            onClick={() => setAdding(true)}
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-garden-patch font-bold hover:bg-willow-mist/50 transition-colors"
+          >
+            + Add new staple
+          </button>
+        ) : (
+          <form onSubmit={handleAddNew} className="px-4 py-3 flex gap-2 bg-fresh-herb/10">
+            <input
+              autoFocus
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              placeholder="Staple name"
+              className="flex-1 border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+            />
+            <select
+              value={newStore}
+              onChange={e => setNewStore(e.target.value)}
+              className="border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none"
+            >
+              {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+            <button type="submit" disabled={saving} className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">
+              {saving ? '…' : 'Add'}
+            </button>
+            <button type="button" onClick={() => setAdding(false)} className="text-stone-grey px-2 text-sm">Cancel</button>
+          </form>
+        )}
+      </div>
+
+      <button
+        onClick={() => onNext(selected)}
+        className="w-full bg-fresh-herb text-soil-shadow font-bold py-3 rounded-pill shadow-card hover:opacity-90 transition-opacity"
+      >
+        Next: Pantry →
+      </button>
+      <button
+        onClick={() => onNext([])}
+        className="w-full mt-2 text-stone-grey text-sm hover:text-soil-shadow"
+      >
+        Skip — no staples this week
+      </button>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 2: Create PantryInput component**
 
 Create `src/components/PantryInput.jsx`:
 
@@ -1392,9 +1588,6 @@ const STORES = [
 ]
 
 /**
- * Pantry input: searchable selector from the ingredient catalog.
- * Selected ingredient IDs are passed to onStart.
- *
  * Props:
  *   onStart: (selectedIngredients: Array<{id, name, store}>) => void
  */
@@ -1402,7 +1595,6 @@ export function PantryInput({ onStart }) {
   const { ingredients, findOrCreate } = useIngredients()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState([]) // Array<{id, name, store}>
-  // State for adding a brand-new ingredient inline
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
   const [newStore, setNewStore] = useState('aldi')
@@ -1447,15 +1639,16 @@ export function PantryInput({ onStart }) {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-16 bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-      <h2 className="text-xl font-bold mb-1">What needs using up?</h2>
-      <p className="text-sm text-gray-500 mb-5">Pick ingredients from the fridge or pantry to use this week.</p>
+    <div className="max-w-md mx-auto mt-10 bg-willow-mist rounded-card p-8 shadow-card">
+      <p className="text-xs font-bold tracking-widest uppercase text-garden-patch mb-1">Step 2 of 2</p>
+      <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow mb-1">Pantry check</h2>
+      <p className="text-sm text-stone-grey mb-5">What needs using up this week?</p>
 
       {/* Selected chips */}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {selected.map(s => (
-            <span key={s.id} className="inline-flex items-center gap-1 bg-indigo-600 text-white text-sm px-3 py-1 rounded-full">
+            <span key={s.id} className="inline-flex items-center gap-1 bg-fresh-herb text-soil-shadow text-sm font-bold px-3 py-1 rounded-pill shadow-card">
               {s.name}
               <button onClick={() => deselect(s.id)} className="opacity-70 hover:opacity-100 text-base leading-none ml-1">&times;</button>
             </span>
@@ -1465,28 +1658,32 @@ export function PantryInput({ onStart }) {
 
       {/* Search */}
       <div className="relative mb-3">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-grey text-sm">🔍</span>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search ingredients…"
-          className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full border border-willow-mist rounded-2xl bg-field-cream pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
         />
       </div>
 
       {/* Ingredient list */}
-      <div className="border border-gray-200 rounded-xl overflow-hidden mb-5 max-h-64 overflow-y-auto">
+      <div className="bg-field-cream rounded-2xl overflow-hidden mb-5 max-h-64 overflow-y-auto">
         {filtered.map(ing => (
           <button
             key={ing.id}
             onClick={() => toggle(ing)}
-            className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm border-b border-gray-50 last:border-0 transition-colors ${isSelected(ing.id) ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+            className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm border-b border-willow-mist last:border-0 transition-colors ${
+              isSelected(ing.id) ? 'bg-fresh-herb/20' : 'hover:bg-willow-mist/50'
+            }`}
           >
             <div>
-              <span className="font-medium">{ing.name}</span>
-              <span className="text-xs text-gray-400 ml-2">{STORES.find(s => s.value === ing.store)?.label}</span>
+              <span className="font-bold text-soil-shadow">{ing.name}</span>
+              <span className="text-xs text-stone-grey ml-2">{STORES.find(s => s.value === ing.store)?.label}</span>
             </div>
-            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center text-xs shrink-0 ${isSelected(ing.id) ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center text-xs shrink-0 transition-colors ${
+              isSelected(ing.id) ? 'bg-fresh-herb border-fresh-herb text-soil-shadow' : 'border-stone-grey/40'
+            }`}>
               {isSelected(ing.id) && '✓'}
             </div>
           </button>
@@ -1495,42 +1692,44 @@ export function PantryInput({ onStart }) {
         {/* Add new ingredient */}
         {!adding ? (
           <button
-            onClick={() => { setAdding(true) }}
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-indigo-600 font-medium hover:bg-indigo-50 transition-colors"
+            onClick={() => setAdding(true)}
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-garden-patch font-bold hover:bg-willow-mist/50 transition-colors"
           >
             + Add new ingredient
           </button>
         ) : (
-          <form onSubmit={handleAddNew} className="px-4 py-3 flex gap-2 bg-indigo-50">
+          <form onSubmit={handleAddNew} className="px-4 py-3 flex gap-2 bg-fresh-herb/10">
             <input
               autoFocus
               value={newName}
               onChange={e => setNewName(e.target.value)}
               placeholder="Ingredient name"
-              className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="flex-1 border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none focus:ring-2 focus:ring-fresh-herb"
             />
             <select
               value={newStore}
               onChange={e => setNewStore(e.target.value)}
-              className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none"
+              className="border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none"
             >
               {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-            <button type="submit" disabled={saving} className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">Add</button>
-            <button type="button" onClick={() => setAdding(false)} className="text-gray-400 px-2 text-sm">Cancel</button>
+            <button type="submit" disabled={saving} className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">
+              {saving ? '…' : 'Add'}
+            </button>
+            <button type="button" onClick={() => setAdding(false)} className="text-stone-grey px-2 text-sm">Cancel</button>
           </form>
         )}
       </div>
 
       <button
         onClick={() => onStart(selected)}
-        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+        className="w-full bg-fresh-herb text-soil-shadow font-bold py-3 rounded-pill shadow-card hover:opacity-90 transition-opacity"
       >
         Let's plan →
       </button>
       <button
         onClick={() => onStart([])}
-        className="w-full mt-2 text-gray-400 text-sm hover:text-gray-600"
+        className="w-full mt-2 text-stone-grey text-sm hover:text-soil-shadow"
       >
         Skip — nothing to use up
       </button>
@@ -1539,7 +1738,7 @@ export function PantryInput({ onStart }) {
 }
 ```
 
-- [ ] **Step 2: Create WeekGrid component**
+- [ ] **Step 3: Create WeekGrid component**
 
 Create `src/components/WeekGrid.jsx`:
 
@@ -1547,8 +1746,8 @@ Create `src/components/WeekGrid.jsx`:
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 const SLOT_DISPLAY = {
-  eating_out: { label: '🍽️ Eating Out', style: 'text-gray-400 italic' },
-  flex: { label: '🎲 Flex Night', style: 'text-gray-400 italic' },
+  eating_out: { label: '🍽️ Eating Out', style: 'text-stone-grey italic' },
+  flex:        { label: '🎲 Flex Night',  style: 'text-stone-grey italic' },
 }
 
 /**
@@ -1563,7 +1762,7 @@ export function WeekGrid({ slots, onSlotClick }) {
         const key = day.toLowerCase()
         const slot = slots[key]
         const display = slot?.type === 'recipe'
-          ? { label: slot.recipe?.name ?? 'Recipe', style: 'text-gray-800 font-medium' }
+          ? { label: slot.recipe?.name ?? 'Recipe', style: 'text-soil-shadow font-bold' }
           : slot
           ? SLOT_DISPLAY[slot.type]
           : null
@@ -1572,13 +1771,13 @@ export function WeekGrid({ slots, onSlotClick }) {
           <button
             key={day}
             onClick={() => onSlotClick(key)}
-            className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-indigo-300 hover:shadow-sm transition-all text-left"
+            className="w-full flex items-center gap-4 bg-willow-mist rounded-2xl px-5 py-4 shadow-card hover:opacity-90 transition-opacity text-left"
           >
-            <span className="w-24 text-sm text-gray-500 shrink-0">{day}</span>
+            <span className="w-24 text-sm text-stone-grey font-bold tracking-wide shrink-0">{day}</span>
             {display ? (
               <span className={`text-sm ${display.style}`}>{display.label}</span>
             ) : (
-              <span className="text-sm text-gray-300">+ pick meal</span>
+              <span className="text-sm text-stone-grey/50">+ pick meal</span>
             )}
           </button>
         )
@@ -1588,24 +1787,26 @@ export function WeekGrid({ slots, onSlotClick }) {
 }
 ```
 
-- [ ] **Step 3: Create RecipePicker component**
+- [ ] **Step 4: Create RecipePicker component**
 
 Create `src/components/RecipePicker.jsx`:
 
 ```jsx
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 /**
  * Props:
- *   recipes: Array<{id, name, category_id, category, ingredients: [{id, name}]}>
+ *   recipes: Array<{id, name, category_id, ingredients: [{id, name}]}>
  *   categories: Array<{id, name}>
- *   pantryItems: string[] — lowercase ingredient names to use up
- *   onSelect: (slot: {type: 'recipe', recipe: {id, name}} | {type: 'eating_out'} | {type: 'flex'}) => void
+ *   pantryItems: string[] — ingredient names to use up
+ *   onSelect: ({type: 'recipe', recipe: {id, name}} | {type: 'eating_out'} | {type: 'flex'}) => void
  *   onClose: () => void
  *   day: string
  */
 export function RecipePicker({ recipes, categories, pantryItems, onSelect, onClose, day }) {
   const [filterCategory, setFilterCategory] = useState('all')
+  const [search, setSearch] = useState('')
 
   const normalised = pantryItems.map(p => p.toLowerCase())
 
@@ -1616,50 +1817,69 @@ export function RecipePicker({ recipes, categories, pantryItems, onSelect, onClo
     )
   }
 
-  const filtered = filterCategory === 'all'
-    ? recipes
-    : recipes.filter(r => r.category_id === filterCategory)
+  const bySearch = search.trim()
+    ? recipes.filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
+    : recipes
 
-  const matches = filtered.filter(matchesPantry)
-  const rest = filtered.filter(r => !matchesPantry(r))
+  const byCategory = filterCategory === 'all'
+    ? bySearch
+    : bySearch.filter(r => r.category_id === filterCategory)
+
+  const matches = byCategory.filter(matchesPantry)
+  const rest = byCategory.filter(r => !matchesPantry(r))
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end" onClick={onClose}>
       <div
-        className="w-full max-w-sm bg-white shadow-2xl flex flex-col h-full"
+        className="w-full max-w-sm bg-grain-sand shadow-card flex flex-col h-full"
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-willow-mist flex items-center justify-between">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Picking meal for</p>
-            <p className="font-semibold capitalize">{day}</p>
+            <p className="text-xs font-bold tracking-widest uppercase text-garden-patch">Picking meal for</p>
+            <p className="font-display font-light text-2xl tracking-tight text-soil-shadow capitalize">{day}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-stone-grey hover:text-soil-shadow text-2xl leading-none">&times;</button>
+        </div>
+
+        {/* Search */}
+        <div className="px-4 pt-3 pb-2">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search recipes…"
+            className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+          />
         </div>
 
         {/* Quick options */}
-        <div className="px-4 pt-4 pb-2 flex gap-2">
+        <div className="px-4 pb-2 flex gap-2">
           <button
             onClick={() => onSelect({ type: 'eating_out' })}
-            className="flex-1 border border-gray-200 rounded-lg py-2 text-sm hover:bg-gray-50"
+            className="flex-1 border-2 border-willow-mist rounded-2xl py-2 text-sm font-bold text-stone-grey hover:border-fresh-herb hover:text-soil-shadow transition-colors"
           >
             🍽️ Eating Out
           </button>
           <button
             onClick={() => onSelect({ type: 'flex' })}
-            className="flex-1 border border-gray-200 rounded-lg py-2 text-sm hover:bg-gray-50"
+            className="flex-1 border-2 border-willow-mist rounded-2xl py-2 text-sm font-bold text-stone-grey hover:border-fresh-herb hover:text-soil-shadow transition-colors"
           >
             🎲 Flex Night
           </button>
         </div>
 
         {/* Category filter */}
-        <div className="px-4 py-2 flex gap-2 flex-wrap border-b border-gray-100">
+        <div className="px-4 py-2 flex gap-2 flex-wrap border-b border-willow-mist">
           {[{ id: 'all', name: 'All' }, ...categories].map(c => (
             <button
               key={c.id}
               onClick={() => setFilterCategory(c.id)}
-              className={`px-3 py-1 rounded-full text-xs ${filterCategory === c.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              className={`px-3 py-1 rounded-pill text-xs font-bold transition-colors ${
+                filterCategory === c.id
+                  ? 'bg-garden-patch text-fresh-herb'
+                  : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
+              }`}
             >
               {c.name}
             </button>
@@ -1670,34 +1890,43 @@ export function RecipePicker({ recipes, categories, pantryItems, onSelect, onClo
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
           {matches.length > 0 && (
             <>
-              <p className="text-xs text-indigo-500 font-medium uppercase tracking-wide mb-1">Uses what you have</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-garden-patch mb-1">Uses what you have</p>
               {matches.map(r => (
                 <button
                   key={r.id}
                   onClick={() => onSelect({ type: 'recipe', recipe: { id: r.id, name: r.name } })}
-                  className="w-full text-left px-3 py-3 rounded-lg border-2 border-indigo-300 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                  className="w-full text-left px-4 py-3 rounded-2xl bg-fresh-herb/30 border border-fresh-herb/50 hover:bg-fresh-herb/50 transition-colors shadow-card"
                 >
-                  <span className="text-sm font-medium text-indigo-900">{r.name}</span>
-                  <span className="text-xs text-indigo-400 ml-2">
+                  <span className="text-sm font-bold text-soil-shadow">{r.name}</span>
+                  <span className="text-xs text-garden-patch ml-2">
                     {r.ingredients.filter(i => normalised.some(p => i.name.toLowerCase().includes(p))).map(i => i.name).join(', ')}
                   </span>
                 </button>
               ))}
-              {rest.length > 0 && <hr className="border-gray-100 my-2" />}
+              {rest.length > 0 && <hr className="border-willow-mist my-2" />}
             </>
           )}
           {rest.map(r => (
             <button
               key={r.id}
               onClick={() => onSelect({ type: 'recipe', recipe: { id: r.id, name: r.name } })}
-              className="w-full text-left px-3 py-3 rounded-lg border border-gray-200 hover:border-indigo-200 hover:bg-gray-50 transition-colors"
+              className="w-full text-left px-4 py-3 rounded-2xl bg-willow-mist hover:bg-fresh-herb/20 transition-colors"
             >
-              <span className="text-sm">{r.name}</span>
+              <span className="text-sm font-bold text-soil-shadow">{r.name}</span>
             </button>
           ))}
-          {filtered.length === 0 && (
-            <p className="text-center text-gray-400 text-sm py-8">No recipes yet. Add some in the Recipes tab.</p>
+
+          {byCategory.length === 0 && (
+            <p className="text-center text-stone-grey text-sm py-6">No recipes found.</p>
           )}
+
+          {/* Add new recipe */}
+          <Link
+            to="/recipes"
+            className="w-full flex items-center justify-center gap-2 mt-2 px-4 py-3 rounded-2xl border-2 border-dashed border-willow-mist text-stone-grey text-sm font-bold hover:border-garden-patch hover:text-garden-patch transition-colors"
+          >
+            + Add new recipe
+          </Link>
         </div>
       </div>
     </div>
@@ -1705,7 +1934,7 @@ export function RecipePicker({ recipes, categories, pantryItems, onSelect, onClo
 }
 ```
 
-- [ ] **Step 4: Create GroceryList component**
+- [ ] **Step 5: Create GroceryList component**
 
 Create `src/components/GroceryList.jsx`:
 
@@ -1713,9 +1942,9 @@ Create `src/components/GroceryList.jsx`:
 import { generateGroceryList } from '../utils/groceryList'
 
 const STORE_CONFIG = [
-  { key: 'sams_club', label: "🏪 Sam's Club" },
-  { key: 'aldi', label: '🛒 Aldi' },
-  { key: 'target', label: '🎯 Target' },
+  { key: 'sams_club', label: "Sam's Club" },
+  { key: 'aldi',     label: 'Aldi' },
+  { key: 'target',   label: 'Target' },
 ]
 
 /**
@@ -1745,38 +1974,41 @@ export function GroceryList({ slots, recipes, staples, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-40 bg-soil-shadow/40 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+        className="bg-field-cream rounded-card shadow-card w-full max-w-2xl max-h-[85vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Grocery List</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        <div className="px-6 py-5 border-b border-willow-mist flex items-center justify-between">
+          <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow">Grocery List</h2>
+          <button onClick={onClose} className="text-stone-grey hover:text-soil-shadow text-2xl leading-none">&times;</button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-5">
           {total === 0 ? (
-            <p className="text-center text-gray-400 py-8">No meals planned yet — nothing to buy.</p>
+            <p className="text-center text-stone-grey py-8">No meals planned yet — nothing to buy.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {STORE_CONFIG.map(store => (
                 <div key={store.key}>
-                  <h3 className="font-semibold text-sm mb-3">{store.label}</h3>
+                  <h3 className="font-bold text-sm text-garden-patch mb-3 uppercase tracking-widest">{store.label}</h3>
                   {list[store.key].length === 0 ? (
-                    <p className="text-xs text-gray-300">Nothing from here</p>
+                    <p className="text-xs text-stone-grey/50">Nothing from here</p>
                   ) : (
-                    <ul className="space-y-1.5">
+                    <ul className="space-y-2">
                       {list[store.key].map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="text-gray-400 mt-0.5">□</span>
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-stone-grey mt-0.5 shrink-0">□</span>
                           <span>
-                            {item.name}
+                            <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
                             {item.isStaple && (
-                              <span className="ml-1 text-xs text-amber-500">★</span>
+                              <span className="ml-1 text-xs text-fresh-herb font-bold">★</span>
                             )}
                             {item.notes && (
-                              <span className="block text-xs text-gray-400">{item.notes}</span>
+                              <span className="block text-xs text-stone-grey">{item.notes}</span>
+                            )}
+                            {!item.isStaple && item.meals && item.meals.length > 0 && (
+                              <span className="block text-xs text-stone-grey">{item.meals.join(', ')}</span>
                             )}
                           </span>
                         </li>
@@ -1788,13 +2020,18 @@ export function GroceryList({ slots, recipes, staples, onClose }) {
             </div>
           )}
           {total > 0 && (
-            <p className="text-xs text-gray-400 mt-6">★ staple — check if you have any</p>
+            <p className="text-xs text-stone-grey mt-6">★ staple — check if you have enough</p>
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Close</button>
-          <button onClick={copyList} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+        <div className="px-6 py-4 border-t border-willow-mist flex gap-3 justify-end">
+          <button onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-stone-grey hover:text-soil-shadow rounded-pill">
+            Close
+          </button>
+          <button
+            onClick={copyList}
+            className="px-5 py-2.5 text-sm font-bold bg-fresh-herb text-soil-shadow rounded-pill shadow-card hover:opacity-90 transition-opacity"
+          >
             📋 Copy list
           </button>
         </div>
@@ -1804,7 +2041,7 @@ export function GroceryList({ slots, recipes, staples, onClose }) {
 }
 ```
 
-- [ ] **Step 5: Implement PlannerPage**
+- [ ] **Step 6: Implement PlannerPage**
 
 Replace `src/pages/PlannerPage.jsx`:
 
@@ -1812,6 +2049,7 @@ Replace `src/pages/PlannerPage.jsx`:
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
+import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
 import { WeekGrid } from '../components/WeekGrid'
 import { RecipePicker } from '../components/RecipePicker'
@@ -1826,15 +2064,20 @@ export default function PlannerPage() {
   const { recipes, categories, loading } = useRecipes()
   const { staples } = useStaples()
 
-  // Phase: 'pantry' | 'planning' | 'grocery'
-  const [phase, setPhase] = useState('pantry')
-  // pantryItems: Array<{id, name, store}> — selected from ingredient catalog
-  const [pantryItems, setPantryItems] = useState([])
+  // phase: 'staples' | 'pantry' | 'planning' | 'grocery'
+  const [phase, setPhase] = useState('staples')
+  const [selectedStaples, setSelectedStaples] = useState([]) // Array<{id, name, store, notes}>
+  const [pantryItems, setPantryItems] = useState([])          // Array<{id, name, store}>
   const [slots, setSlots] = useState(EMPTY_SLOTS)
-  const [activeDay, setActiveDay] = useState(null) // which day has the picker open
+  const [activeDay, setActiveDay] = useState(null)
 
-  function handleStart(items) {
-    setPantryItems(items) // items is Array<{id, name, store}>
+  function handleStaplesNext(chosen) {
+    setSelectedStaples(chosen)
+    setPhase('pantry')
+  }
+
+  function handlePantryStart(items) {
+    setPantryItems(items)
     setPhase('planning')
   }
 
@@ -1850,49 +2093,49 @@ export default function PlannerPage() {
   function handleReset() {
     setSlots(EMPTY_SLOTS)
     setPantryItems([])
-    setPhase('pantry')
+    setSelectedStaples([])
+    setPhase('staples')
   }
 
-  if (loading) return <div className="p-6 text-gray-400">Loading…</div>
+  if (loading) return (
+    <div className="p-6 text-stone-grey font-body">Loading…</div>
+  )
 
-  if (phase === 'pantry') {
-    return <PantryInput onStart={handleStart} />
-  }
+  if (phase === 'staples') return <StapleChecker onNext={handleStaplesNext} />
+  if (phase === 'pantry')  return <PantryInput onStart={handlePantryStart} />
 
   return (
     <div className="p-6">
-      {/* Active recipe picker panel */}
       {activeDay && (
         <RecipePicker
           recipes={recipes}
           categories={categories}
-          pantryItems={pantryItems.map(i => i.name)} // pass names for matching
+          pantryItems={pantryItems.map(i => i.name)}
           onSelect={handleSelect}
           onClose={() => setActiveDay(null)}
           day={activeDay}
         />
       )}
 
-      {/* Grocery list modal */}
       {phase === 'grocery' && (
         <GroceryList
           slots={slots}
           recipes={recipes}
-          staples={staples}
+          staples={selectedStaples}
           onClose={() => setPhase('planning')}
         />
       )}
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">This Week</h1>
+          <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">This Week</h1>
           {pantryItems.length > 0 && (
-            <p className="text-sm text-indigo-500 mt-0.5">
+            <p className="text-sm text-garden-patch mt-0.5 font-bold">
               Using up: {pantryItems.map(i => i.name).join(', ')}
             </p>
           )}
         </div>
-        <button onClick={handleReset} className="text-sm text-gray-400 hover:text-gray-600">
+        <button onClick={handleReset} className="text-sm text-stone-grey hover:text-soil-shadow font-bold">
           ↺ Start over
         </button>
       </div>
@@ -1902,9 +2145,9 @@ export default function PlannerPage() {
       <div className="mt-6 flex justify-end">
         <button
           onClick={() => setPhase('grocery')}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+          className="bg-fresh-herb text-soil-shadow font-bold px-8 py-3 rounded-pill shadow-card hover:opacity-90 transition-opacity"
         >
-          🛒 Generate Grocery List
+          Generate grocery list →
         </button>
       </div>
     </div>
@@ -1912,37 +2155,40 @@ export default function PlannerPage() {
 }
 ```
 
-- [ ] **Step 6: Manual verify the full flow**
+- [ ] **Step 7: Manual verify the full flow**
 
 ```bash
 npm run dev
 ```
 
 Run through the complete planning session:
-1. Home screen shows pantry input → add "spinach" → click "Let's plan →"
-2. Week grid appears → click Monday → recipe picker slides in
-3. Verify recipes that use spinach are highlighted at top
-4. Select a recipe → slot fills with recipe name
-5. Click Tuesday → select "Eating Out" → shows in slot
-6. Click "Generate Grocery List" → modal opens with items split by store
-7. Staples appear with ★ 
-8. "Eating Out" slot contributes no ingredients
-9. "Copy list" copies formatted text to clipboard
-10. "Start over" resets to pantry input
+1. Home screen shows **Staple Check** → check off "yogurt" → click "Next: Pantry →"
+2. **Pantry Input** appears → add "spinach" → click "Let's plan →"
+3. **Week grid** appears, header shows "Using up: spinach"
+4. Click Monday → recipe picker slides in with search bar and category filters
+5. Verify recipes that use spinach are **highlighted** at top with green background
+6. Select a recipe → slot fills with recipe name
+7. Click Tuesday → select "Eating Out" → shows in slot
+8. Click "Generate grocery list →" → modal opens split into 3 store columns
+9. Each recipe ingredient shows the meal(s) it belongs to below the item name
+10. "yogurt" staple appears with ★ in the correct store column
+11. "Eating Out" slot contributes no ingredients
+12. "Copy list" copies formatted text to clipboard
+13. "Start over" resets back to Staple Check
 
-- [ ] **Step 7: Run all tests**
+- [ ] **Step 8: Run all tests**
 
 ```bash
 npx vitest run
 ```
 
-Expected: 6 tests pass, 0 failures.
+Expected: 7 tests pass, 0 failures.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add src/components/PantryInput.jsx src/components/WeekGrid.jsx src/components/RecipePicker.jsx src/components/GroceryList.jsx src/pages/PlannerPage.jsx
-git commit -m "feat: planner page — full planning flow end to end"
+git add src/components/StapleChecker.jsx src/components/PantryInput.jsx src/components/WeekGrid.jsx src/components/RecipePicker.jsx src/components/GroceryList.jsx src/pages/PlannerPage.jsx
+git commit -m "feat: planner page — staple check, pantry input, week grid, recipe picker, grocery list"
 ```
 
 ---
