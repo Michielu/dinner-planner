@@ -82,7 +82,7 @@ No backend code to write. The Supabase JS client talks directly to the database 
 
 ### Ephemeral (browser state only — never saved)
 
-- Pantry items to use up this week (2–3 ingredient names)
+- Pantry items to use up this week (typically 2–3 ingredient names, no hard limit)
 - Recipes picked for each day of the week
 - Generated grocery list
 
@@ -95,7 +95,7 @@ Pantry Input → Week Planner → (click slot) → Recipe Picker → Grocery Lis
 ```
 
 ### ① Pantry Input
-First screen of every planning session. A simple text list — she types up to 2–3 ingredient names she needs to use up. Not saved to the DB; held in React state for the session.
+First screen of every planning session. A simple text list — she types the ingredient names she needs to use up (typically 2–3). Not saved to the DB; held in React state for the session.
 
 ### ② Week Planner
 Shows 7 day slots (Mon–Sun), all equal. No pre-assigned types. She clicks any slot to open the Recipe Picker. Default is all slots empty. "Generate Grocery List" button activates once she's happy (not gated on all slots being filled — she may leave some empty intentionally).
