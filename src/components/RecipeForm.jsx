@@ -14,20 +14,28 @@ export function RecipeForm({ categories, initial, onSave, onCancel }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
   const [ingredientRows, setIngredientRows] = useState(
-    initial?.ingredients?.map(i => ({ name: i.name, store: i.store, existingId: i.id })) ?? []
+    () => (initial?.ingredients ?? []).map((i, idx) => ({
+      _key: `init-${idx}`,
+      name: i.name,
+      store: i.store,
+      existingId: i.id,
+    }))
   )
+  const [nextKey, setNextKey] = useState(initial?.ingredients?.length ?? 0)
   const [saving, setSaving] = useState(false)
 
   function addRow() {
-    setIngredientRows(rows => [...rows, { name: '', store: 'aldi', existingId: null }])
+    const key = `row-${nextKey}`
+    setNextKey(k => k + 1)
+    setIngredientRows(rows => [...rows, { _key: key, name: '', store: 'aldi', existingId: null }])
   }
 
-  function updateRow(index, value) {
-    setIngredientRows(rows => rows.map((r, i) => i === index ? value : r))
+  function updateRow(key, value) {
+    setIngredientRows(rows => rows.map(r => r._key === key ? { ...r, ...value } : r))
   }
 
-  function removeRow(index) {
-    setIngredientRows(rows => rows.filter((_, i) => i !== index))
+  function removeRow(key) {
+    setIngredientRows(rows => rows.filter(r => r._key !== key))
   }
 
   async function handleSubmit(e) {
@@ -78,13 +86,13 @@ export function RecipeForm({ categories, initial, onSave, onCancel }) {
       {/* Ingredients */}
       <div className="space-y-2">
         <p className="text-xs font-bold text-stone-grey uppercase tracking-widest">Ingredients</p>
-        {ingredientRows.map((row, i) => (
+        {ingredientRows.map(row => (
           <IngredientRow
-            key={i}
+            key={row._key}
             allIngredients={allIngredients}
             value={row}
-            onChange={v => updateRow(i, v)}
-            onRemove={() => removeRow(i)}
+            onChange={v => updateRow(row._key, v)}
+            onRemove={() => removeRow(row._key)}
           />
         ))}
         <button
