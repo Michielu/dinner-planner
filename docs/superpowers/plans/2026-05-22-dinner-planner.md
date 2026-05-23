@@ -169,16 +169,18 @@ create table staple_items (
 
 -- Seed default categories
 insert into meal_categories (name, sort_order) values
-  ('Fry Pan', 1),
-  ('Pasta', 2),
-  ('Slow Cooker', 3);
+  ('Pasta', 1),
+  ('Asian', 2),
+  ('Mexican', 3),
+  ('Sheet Pan', 4),
+  ('Crock Pot', 5);
 ```
 
 - [ ] **Step 3: Run schema in Supabase**
 
 In the Supabase dashboard → SQL Editor → paste the full contents of `supabase/schema.sql` → Run.
 
-Expected: All 5 tables created, 3 category rows inserted. No errors.
+Expected: All 5 tables created, 5 category rows inserted. No errors.
 
 - [ ] **Step 4: Disable Row Level Security for all tables (household app, no auth)**
 
@@ -1380,58 +1382,148 @@ git commit -m "feat: recipes page with ingredient autocomplete and catalog persi
 Create `src/components/PantryInput.jsx`:
 
 ```jsx
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useIngredients } from '../hooks/useIngredients'
+
+const STORES = [
+  { value: 'sams_club', label: "Sam's Club" },
+  { value: 'aldi', label: 'Aldi' },
+  { value: 'target', label: 'Target' },
+]
 
 /**
+ * Pantry input: searchable selector from the ingredient catalog.
+ * Selected ingredient IDs are passed to onStart.
+ *
  * Props:
- *   onStart: (pantryItems: string[]) => void
+ *   onStart: (selectedIngredients: Array<{id, name, store}>) => void
  */
 export function PantryInput({ onStart }) {
-  const [items, setItems] = useState([''])
+  const { ingredients, findOrCreate } = useIngredients()
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState([]) // Array<{id, name, store}>
+  // State for adding a brand-new ingredient inline
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newStore, setNewStore] = useState('aldi')
+  const [saving, setSaving] = useState(false)
 
-  function updateItem(index, value) {
-    setItems(prev => prev.map((item, i) => i === index ? value : item))
+  const filtered = useMemo(() => {
+    if (!search.trim()) return ingredients
+    return ingredients.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+  }, [ingredients, search])
+
+  function isSelected(id) {
+    return selected.some(s => s.id === id)
   }
 
-  function addItem() {
-    setItems(prev => [...prev, ''])
+  function toggle(ingredient) {
+    setSelected(prev =>
+      isSelected(ingredient.id)
+        ? prev.filter(s => s.id !== ingredient.id)
+        : [...prev, ingredient]
+    )
   }
 
-  function removeItem(index) {
-    setItems(prev => prev.filter((_, i) => i !== index))
+  function deselect(id) {
+    setSelected(prev => prev.filter(s => s.id !== id))
   }
 
-  function handleStart() {
-    const filled = items.map(i => i.trim()).filter(Boolean)
-    onStart(filled)
+  async function handleAddNew(e) {
+    e.preventDefault()
+    if (!newName.trim()) return
+    setSaving(true)
+    try {
+      const id = await findOrCreate(newName.trim(), newStore)
+      const ingredient = { id, name: newName.trim(), store: newStore }
+      setSelected(prev => [...prev, ingredient])
+      setNewName('')
+      setNewStore('aldi')
+      setAdding(false)
+      setSearch('')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <div className="max-w-md mx-auto mt-16 bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
       <h2 className="text-xl font-bold mb-1">What needs using up?</h2>
-      <p className="text-sm text-gray-500 mb-6">Add any ingredients from the fridge or pantry you want to use this week.</p>
+      <p className="text-sm text-gray-500 mb-5">Pick ingredients from the fridge or pantry to use this week.</p>
 
-      <div className="space-y-2 mb-4">
-        {items.map((item, i) => (
-          <div key={i} className="flex gap-2">
-            <input
-              value={item}
-              onChange={e => updateItem(i, e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addItem())}
-              placeholder="e.g. spinach"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              autoFocus={i === items.length - 1 && i > 0}
-            />
-            {items.length > 1 && (
-              <button type="button" onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600 px-2 text-lg">&times;</button>
-            )}
-          </div>
+      {/* Selected chips */}
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(s => (
+            <span key={s.id} className="inline-flex items-center gap-1 bg-indigo-600 text-white text-sm px-3 py-1 rounded-full">
+              {s.name}
+              <button onClick={() => deselect(s.id)} className="opacity-70 hover:opacity-100 text-base leading-none ml-1">&times;</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="relative mb-3">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search ingredients…"
+          className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+      </div>
+
+      {/* Ingredient list */}
+      <div className="border border-gray-200 rounded-xl overflow-hidden mb-5 max-h-64 overflow-y-auto">
+        {filtered.map(ing => (
+          <button
+            key={ing.id}
+            onClick={() => toggle(ing)}
+            className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm border-b border-gray-50 last:border-0 transition-colors ${isSelected(ing.id) ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+          >
+            <div>
+              <span className="font-medium">{ing.name}</span>
+              <span className="text-xs text-gray-400 ml-2">{STORES.find(s => s.value === ing.store)?.label}</span>
+            </div>
+            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center text-xs shrink-0 ${isSelected(ing.id) ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+              {isSelected(ing.id) && '✓'}
+            </div>
+          </button>
         ))}
-        <button type="button" onClick={addItem} className="text-indigo-600 text-sm hover:underline">+ Add another</button>
+
+        {/* Add new ingredient */}
+        {!adding ? (
+          <button
+            onClick={() => { setAdding(true) }}
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-indigo-600 font-medium hover:bg-indigo-50 transition-colors"
+          >
+            + Add new ingredient
+          </button>
+        ) : (
+          <form onSubmit={handleAddNew} className="px-4 py-3 flex gap-2 bg-indigo-50">
+            <input
+              autoFocus
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              placeholder="Ingredient name"
+              className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <select
+              value={newStore}
+              onChange={e => setNewStore(e.target.value)}
+              className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none"
+            >
+              {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+            <button type="submit" disabled={saving} className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">Add</button>
+            <button type="button" onClick={() => setAdding(false)} className="text-gray-400 px-2 text-sm">Cancel</button>
+          </form>
+        )}
       </div>
 
       <button
-        onClick={handleStart}
+        onClick={() => onStart(selected)}
         className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors"
       >
         Let's plan →
@@ -1736,12 +1828,13 @@ export default function PlannerPage() {
 
   // Phase: 'pantry' | 'planning' | 'grocery'
   const [phase, setPhase] = useState('pantry')
+  // pantryItems: Array<{id, name, store}> — selected from ingredient catalog
   const [pantryItems, setPantryItems] = useState([])
   const [slots, setSlots] = useState(EMPTY_SLOTS)
   const [activeDay, setActiveDay] = useState(null) // which day has the picker open
 
   function handleStart(items) {
-    setPantryItems(items)
+    setPantryItems(items) // items is Array<{id, name, store}>
     setPhase('planning')
   }
 
@@ -1773,7 +1866,7 @@ export default function PlannerPage() {
         <RecipePicker
           recipes={recipes}
           categories={categories}
-          pantryItems={pantryItems}
+          pantryItems={pantryItems.map(i => i.name)} // pass names for matching
           onSelect={handleSelect}
           onClose={() => setActiveDay(null)}
           day={activeDay}
@@ -1795,7 +1888,7 @@ export default function PlannerPage() {
           <h1 className="text-2xl font-bold">This Week</h1>
           {pantryItems.length > 0 && (
             <p className="text-sm text-indigo-500 mt-0.5">
-              Using up: {pantryItems.join(', ')}
+              Using up: {pantryItems.map(i => i.name).join(', ')}
             </p>
           )}
         </div>

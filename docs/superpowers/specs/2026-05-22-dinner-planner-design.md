@@ -95,7 +95,7 @@ Pantry Input → Week Planner → (click slot) → Recipe Picker → Grocery Lis
 ```
 
 ### ① Pantry Input
-First screen of every planning session. A simple text list — she types the ingredient names she needs to use up (typically 2–3). Not saved to the DB; held in React state for the session.
+First screen of every planning session. A searchable selector that pulls from the global `ingredients` catalog. She taps/clicks to toggle ingredients on or off (selected items appear as chips). A search box filters the list. An "Add new ingredient" option at the bottom lets her add items not yet in the catalog (name + store). Selected items are not saved to the DB — held in React state for the session only.
 
 ### ② Week Planner
 Shows 7 day slots (Mon–Sun), all equal. No pre-assigned types. She clicks any slot to open the Recipe Picker. Default is all slots empty. "Generate Grocery List" button activates once she's happy (not gated on all slots being filled — she may leave some empty intentionally).
