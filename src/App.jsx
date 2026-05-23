@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route, NavLink } from 'react-router-dom'
+import { ConnectionBanner } from './components/ConnectionBanner'
+import PlannerPage from './pages/PlannerPage'
+import RecipesPage from './pages/RecipesPage'
+import ManagePage from './pages/ManagePage'
 
-function App() {
-  const [count, setCount] = useState(0)
-
+function NavItem({ to, label }) {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `px-4 py-2 rounded-pill text-sm font-bold tracking-wide transition-colors ${
+          isActive
+            ? 'bg-garden-patch text-fresh-herb'
+            : 'text-stone-grey hover:text-soil-shadow'
+        }`
+      }
+    >
+      {label}
+    </NavLink>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <div className="min-h-screen bg-field-cream font-body text-soil-shadow">
+      <ConnectionBanner />
+      <nav className="bg-willow-mist shadow-card px-6 py-4 flex items-center gap-3">
+        <span className="font-display font-light text-2xl tracking-tight text-garden-patch mr-4">
+          Dinner Planner
+        </span>
+        <NavItem to="/" label="This Week" />
+        <NavItem to="/recipes" label="Recipes" />
+        <NavItem to="/manage" label="Staples & Categories" />
+      </nav>
+      <main className="max-w-4xl mx-auto">
+        <Routes>
+          <Route path="/" element={<PlannerPage />} />
+          <Route path="/recipes" element={<RecipesPage />} />
+          <Route path="/manage" element={<ManagePage />} />
+        </Routes>
+      </main>
+    </div>
+  )
+}
