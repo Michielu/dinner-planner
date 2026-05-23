@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 
 /**
  * Props:
@@ -129,13 +128,15 @@ export function RecipePicker({ recipes, categories, pantryItems, onSelect, onClo
             <p className="text-center text-stone-grey text-sm py-6">No recipes found.</p>
           )}
 
-          {/* Add new recipe */}
-          <Link
-            to="/recipes"
+          {/* Add new recipe — opens in new tab to preserve planning state */}
+          <a
+            href="/recipes"
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 mt-2 px-4 py-3 rounded-2xl border-2 border-dashed border-willow-mist text-stone-grey text-sm font-bold hover:border-garden-patch hover:text-garden-patch transition-colors"
           >
-            + Add new recipe
-          </Link>
+            + Add new recipe ↗
+          </a>
         </div>
       </div>
     </div>

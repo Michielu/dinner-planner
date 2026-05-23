@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
-import { useStaples } from '../hooks/useStaples'
 import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
 import { WeekGrid } from '../components/WeekGrid'
@@ -14,7 +13,6 @@ const EMPTY_SLOTS = {
 
 export default function PlannerPage() {
   const { recipes, categories, loading } = useRecipes()
-  const { staples } = useStaples()
 
   // phase: 'staples' | 'pantry' | 'planning' | 'grocery'
   const [phase, setPhase] = useState('staples')
@@ -46,6 +44,7 @@ export default function PlannerPage() {
     setSlots(EMPTY_SLOTS)
     setPantryItems([])
     setSelectedStaples([])
+    setActiveDay(null)
     setPhase('staples')
   }
 

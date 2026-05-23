@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { generateGroceryList } from '../utils/groceryList'
 
 const STORE_CONFIG = [
@@ -14,6 +15,8 @@ const STORE_CONFIG = [
  *   onClose: () => void
  */
 export function GroceryList({ slots, recipes, staples, onClose }) {
+  const [copyStatus, setCopyStatus] = useState(null) // null | 'copied' | 'error'
+
   const slotArray = Object.entries(slots)
     .filter(([, slot]) => slot !== null)
     .map(([day, slot]) => ({ day, ...slot, recipeId: slot?.recipe?.id }))
@@ -21,7 +24,7 @@ export function GroceryList({ slots, recipes, staples, onClose }) {
   const list = generateGroceryList(slotArray, recipes, staples)
   const total = Object.values(list).reduce((sum, items) => sum + items.length, 0)
 
-  function copyList() {
+  async function copyList() {
     const lines = STORE_CONFIG
       .filter(s => list[s.key].length > 0)
       .flatMap(s => [
@@ -29,7 +32,14 @@ export function GroceryList({ slots, recipes, staples, onClose }) {
         ...list[s.key].map(i => `  □ ${i.name}${i.isStaple ? ' ★' : ''}`),
         '',
       ])
-    navigator.clipboard.writeText(lines.join('\n'))
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'))
+      setCopyStatus('copied')
+      setTimeout(() => setCopyStatus(null), 2000)
+    } catch {
+      setCopyStatus('error')
+      setTimeout(() => setCopyStatus(null), 3000)
+    }
   }
 
   return (
@@ -89,9 +99,13 @@ export function GroceryList({ slots, recipes, staples, onClose }) {
           </button>
           <button
             onClick={copyList}
-            className="px-5 py-2.5 text-sm font-bold bg-fresh-herb text-soil-shadow rounded-pill shadow-card hover:opacity-90 transition-opacity"
+            className={`px-5 py-2.5 text-sm font-bold rounded-pill shadow-card transition-opacity ${
+              copyStatus === 'error'
+                ? 'bg-red-400 text-white'
+                : 'bg-fresh-herb text-soil-shadow hover:opacity-90'
+            }`}
           >
-            📋 Copy list
+            {copyStatus === 'copied' ? '✓ Copied!' : copyStatus === 'error' ? 'Copy failed' : '📋 Copy list'}
           </button>
         </div>
       </div>

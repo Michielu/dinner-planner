@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStaples } from '../hooks/useStaples'
 
 const STORES = [
@@ -18,6 +18,24 @@ export function StapleChecker({ onNext }) {
   const [newName, setNewName] = useState('')
   const [newStore, setNewStore] = useState('aldi')
   const [saving, setSaving] = useState(false)
+  // Names pending auto-selection (after addStaple, before list refresh)
+  const [pendingNames, setPendingNames] = useState(new Set())
+
+  // When staples list refreshes, auto-select any newly added staples
+  useEffect(() => {
+    if (pendingNames.size === 0) return
+    const toSelect = staples.filter(s => pendingNames.has(s.name.toLowerCase()))
+    if (toSelect.length === 0) return
+    setSelected(prev => {
+      const existingIds = new Set(prev.map(s => s.id))
+      return [...prev, ...toSelect.filter(s => !existingIds.has(s.id))]
+    })
+    setPendingNames(prev => {
+      const next = new Set(prev)
+      toSelect.forEach(s => next.delete(s.name.toLowerCase()))
+      return next
+    })
+  }, [staples, pendingNames])
 
   function isSelected(id) {
     return selected.some(s => s.id === id)
@@ -35,8 +53,12 @@ export function StapleChecker({ onNext }) {
     e.preventDefault()
     if (!newName.trim()) return
     setSaving(true)
+    const name = newName.trim()
+    const store = newStore
     try {
-      await addStaple({ name: newName.trim(), store: newStore, notes: null })
+      await addStaple({ name, store, notes: null })
+      // Queue this name for auto-selection once useStaples refreshes the list
+      setPendingNames(prev => new Set([...prev, name.toLowerCase()]))
       setNewName('')
       setNewStore('aldi')
       setAdding(false)
