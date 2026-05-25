@@ -5,6 +5,9 @@ create table meal_categories (
   sort_order int not null default 0
 );
 
+alter table meal_categories enable row level security;
+create policy "anon_all" on meal_categories for all to anon using (true) with check (true);
+
 -- Global ingredient catalog — name + which store to buy from
 create table ingredients (
   id uuid primary key default gen_random_uuid(),
@@ -12,6 +15,9 @@ create table ingredients (
   store text not null check (store in ('sams_club', 'aldi', 'target')),
   constraint ingredients_name_unique unique (name)
 );
+
+alter table ingredients enable row level security;
+create policy "anon_all" on ingredients for all to anon using (true) with check (true);
 
 -- Recipes
 create table recipes (
@@ -21,6 +27,9 @@ create table recipes (
   created_at timestamptz not null default now()
 );
 
+alter table recipes enable row level security;
+create policy "anon_all" on recipes for all to anon using (true) with check (true);
+
 -- Join table: which ingredients belong to which recipe
 create table recipe_ingredients (
   id uuid primary key default gen_random_uuid(),
@@ -29,6 +38,9 @@ create table recipe_ingredients (
   constraint recipe_ingredients_unique unique (recipe_id, ingredient_id)
 );
 
+alter table recipe_ingredients enable row level security;
+create policy "anon_all" on recipe_ingredients for all to anon using (true) with check (true);
+
 -- Staple items — selected at the start of each planning session
 create table staple_items (
   id uuid primary key default gen_random_uuid(),
@@ -36,6 +48,9 @@ create table staple_items (
   store text not null check (store in ('sams_club', 'aldi', 'target')),
   notes text
 );
+
+alter table staple_items enable row level security;
+create policy "anon_all" on staple_items for all to anon using (true) with check (true);
 
 -- Seed default categories
 insert into meal_categories (name, sort_order) values
