@@ -32,10 +32,14 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
 
   async function handleAddExtra() {
     if (!newExtraName.trim()) return
-    await onAddExtra(newExtraName.trim(), newExtraStore)
-    setNewExtraName('')
-    setNewExtraStore('aldi')
-    setAddingExtra(false)
+    try {
+      await onAddExtra(newExtraName.trim(), newExtraStore)
+      setNewExtraName('')
+      setNewExtraStore('aldi')
+      setAddingExtra(false)
+    } catch {
+      // Supabase error — form stays open so user can retry
+    }
   }
 
   async function copyList() {
@@ -61,16 +65,18 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
       {/* Header */}
       <div className="px-6 py-5 border-b border-willow-mist flex items-center justify-between gap-4">
         <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow">Grocery List</h2>
-        <button
-          onClick={() => setAddingExtra(true)}
-          className="shrink-0 bg-fresh-herb text-soil-shadow font-bold text-sm px-4 py-2 rounded-pill shadow-card hover:opacity-90 transition-opacity"
-        >
-          + Add item
-        </button>
+        {onAddExtra && (
+          <button
+            onClick={() => setAddingExtra(true)}
+            className="shrink-0 bg-fresh-herb text-soil-shadow font-bold text-sm px-4 py-2 rounded-pill shadow-card hover:opacity-90 transition-opacity"
+          >
+            + Add item
+          </button>
+        )}
       </div>
 
       {/* Inline add-item form */}
-      {addingExtra && (
+      {addingExtra && onAddExtra && (
         <div className="px-6 py-3 border-b border-willow-mist flex gap-2 flex-wrap items-center bg-fresh-herb/10">
           <input
             autoFocus
