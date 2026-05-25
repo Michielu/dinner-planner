@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { generateGroceryList } from '../utils/groceryList'
 
 const STORE_CONFIG = [
-  { key: 'sams_club', label: "Sam's Club" },
-  { key: 'aldi',     label: 'Aldi' },
-  { key: 'target',   label: 'Target' },
+  { value: 'sams_club', label: "Sam's Club" },
+  { value: 'aldi',      label: 'Aldi' },
+  { value: 'target',    label: 'Target' },
+  { value: 'other',     label: 'Other' },
 ]
 
 /**
@@ -12,23 +13,37 @@ const STORE_CONFIG = [
  *   slots: Record<string, {type, recipe?: {id, name}} | null>
  *   recipes: Array<{id, name, ingredients: [{id, name, store}]}>
  *   staples: Array<{id, name, store, notes}>
+ *   extras: Array<{id, name, store}>
+ *   onAddExtra: (name: string, store: string) => Promise<void>
+ *   onRemoveExtra: (id: string) => Promise<void>
  */
-export function GroceryList({ slots, recipes, staples }) {
+export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, onRemoveExtra }) {
   const [copyStatus, setCopyStatus] = useState(null) // null | 'copied' | 'error'
+  const [addingExtra, setAddingExtra] = useState(false)
+  const [newExtraName, setNewExtraName] = useState('')
+  const [newExtraStore, setNewExtraStore] = useState('aldi')
 
   const slotArray = Object.entries(slots)
     .filter(([, slot]) => slot !== null)
     .map(([day, slot]) => ({ day, ...slot, recipeId: slot?.recipe?.id }))
 
-  const list = generateGroceryList(slotArray, recipes, staples)
+  const list = generateGroceryList(slotArray, recipes, staples, extras)
   const total = Object.values(list).reduce((sum, items) => sum + items.length, 0)
+
+  async function handleAddExtra() {
+    if (!newExtraName.trim()) return
+    await onAddExtra(newExtraName.trim(), newExtraStore)
+    setNewExtraName('')
+    setNewExtraStore('aldi')
+    setAddingExtra(false)
+  }
 
   async function copyList() {
     const lines = STORE_CONFIG
-      .filter(s => list[s.key].length > 0)
+      .filter(s => list[s.value]?.length > 0)
       .flatMap(s => [
         s.label,
-        ...list[s.key].map(i => `  □ ${i.name}${i.isStaple ? ' ★' : ''}`),
+        ...list[s.value].map(i => `  □ ${i.name}${i.isStaple ? ' ★' : ''}`),
         '',
       ])
     try {
@@ -43,43 +58,98 @@ export function GroceryList({ slots, recipes, staples }) {
 
   return (
     <div className="flex flex-col">
-      <div className="px-6 py-5 border-b border-willow-mist">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-willow-mist flex items-center justify-between gap-4">
         <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow">Grocery List</h2>
+        <button
+          onClick={() => setAddingExtra(true)}
+          className="shrink-0 bg-fresh-herb text-soil-shadow font-bold text-sm px-4 py-2 rounded-pill shadow-card hover:opacity-90 transition-opacity"
+        >
+          + Add item
+        </button>
       </div>
 
+      {/* Inline add-item form */}
+      {addingExtra && (
+        <div className="px-6 py-3 border-b border-willow-mist flex gap-2 flex-wrap items-center bg-fresh-herb/10">
+          <input
+            autoFocus
+            value={newExtraName}
+            onChange={e => setNewExtraName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddExtra()}
+            placeholder="Item name"
+            className="flex-1 min-w-32 border border-willow-mist rounded-xl bg-field-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+          />
+          <select
+            value={newExtraStore}
+            onChange={e => setNewExtraStore(e.target.value)}
+            className="border border-willow-mist rounded-xl bg-field-cream px-2 py-2 text-sm focus:outline-none"
+          >
+            {STORE_CONFIG.map(s => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleAddExtra}
+            disabled={!newExtraName.trim()}
+            className="bg-fresh-herb text-soil-shadow font-bold px-3 py-2 rounded-xl text-sm disabled:opacity-50"
+          >
+            Add
+          </button>
+          <button
+            onClick={() => { setAddingExtra(false); setNewExtraName(''); setNewExtraStore('aldi') }}
+            className="text-stone-grey px-2 text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Store grid */}
       <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
         {total === 0 ? (
           <p className="text-center text-stone-grey py-8">No meals planned yet — nothing to buy.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {STORE_CONFIG.map(store => (
-              <div key={store.key}>
-                <h3 className="font-bold text-xs text-garden-patch mb-3 uppercase tracking-widest">{store.label}</h3>
-                {list[store.key].length === 0 ? (
-                  <p className="text-xs text-stone-grey/50">Nothing from here</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {list[store.key].map((item, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-stone-grey mt-0.5 shrink-0">□</span>
-                        <span>
-                          <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
-                          {item.isStaple && (
-                            <span className="ml-1 text-xs text-fresh-herb font-bold">★</span>
+            {STORE_CONFIG.map(store => {
+              const items = list[store.value] ?? []
+              return (
+                <div key={store.value}>
+                  <h3 className="font-bold text-xs text-garden-patch mb-3 uppercase tracking-widest">{store.label}</h3>
+                  {items.length === 0 ? (
+                    <p className="text-xs text-stone-grey/50">Nothing from here</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {items.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-stone-grey mt-0.5 shrink-0">□</span>
+                          <span className="flex-1">
+                            <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
+                            {item.isStaple && (
+                              <span className="ml-1 text-xs text-fresh-herb font-bold">★</span>
+                            )}
+                            {item.notes && (
+                              <span className="block text-xs text-stone-grey">{item.notes}</span>
+                            )}
+                            {!item.isStaple && !item.isExtra && item.meals?.length > 0 && (
+                              <span className="block text-xs text-stone-grey">{item.meals.join(', ')}</span>
+                            )}
+                          </span>
+                          {item.isExtra && onRemoveExtra && (
+                            <button
+                              onClick={() => onRemoveExtra(item.id)}
+                              className="text-stone-grey hover:text-red-500 text-base leading-none transition-colors shrink-0 mt-0.5"
+                            >
+                              ×
+                            </button>
                           )}
-                          {item.notes && (
-                            <span className="block text-xs text-stone-grey">{item.notes}</span>
-                          )}
-                          {!item.isStaple && item.meals && item.meals.length > 0 && (
-                            <span className="block text-xs text-stone-grey">{item.meals.join(', ')}</span>
-                          )}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
         {total > 0 && (
@@ -87,6 +157,7 @@ export function GroceryList({ slots, recipes, staples }) {
         )}
       </div>
 
+      {/* Footer */}
       <div className="px-6 py-4 border-t border-willow-mist flex gap-3 justify-end">
         <button
           onClick={copyList}
