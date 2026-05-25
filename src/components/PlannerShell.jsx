@@ -32,16 +32,17 @@ export function PlannerShell({ phase, visitedPhases, onNavigate, children }) {
     <div className="p-6 max-w-2xl mx-auto">
       <div className="bg-willow-mist rounded-card shadow-card overflow-hidden">
         {/* Tab bar */}
-        <div className="flex border-b-2 border-willow-mist bg-willow-mist/50">
+        <div role="tablist" className="flex border-b-2 border-willow-mist bg-willow-mist/50">
           {TABS.map(tab => {
             const state = getTabState(tab.key, phase, visitedPhases)
             return (
               <button
                 key={tab.key}
+                role="tab"
                 type="button"
+                aria-selected={state === 'active'}
                 onClick={() => onNavigate(tab.key)}
                 className={tabClass(state)}
-                {...(state === 'active' ? { 'aria-current': 'page' } : {})}
               >
                 {tabLabel(tab.label, state)}
               </button>

@@ -26,6 +26,7 @@ export default function PlannerPage() {
   function navigate(nextPhase) {
     setPhase(nextPhase)
     setVisitedPhases(prev => new Set([...prev, nextPhase]))
+    setActiveDay(null) // close recipe picker on tab change
   }
 
   function handleStaplesNext(chosen) {
