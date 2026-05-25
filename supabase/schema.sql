@@ -59,3 +59,14 @@ insert into meal_categories (name, sort_order) values
   ('Mexican', 3),
   ('Sheet Pan', 4),
   ('Crock Pot', 5);
+
+-- One-off grocery items — added manually, not recurring staples
+create table grocery_extras (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  store text not null check (store in ('sams_club', 'aldi', 'target', 'other')),
+  created_at timestamptz not null default now()
+);
+
+alter table grocery_extras enable row level security;
+create policy "anon_all" on grocery_extras for all to anon using (true) with check (true);
