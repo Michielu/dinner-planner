@@ -38,8 +38,10 @@ export function PlannerShell({ phase, visitedPhases, onNavigate, children }) {
             return (
               <button
                 key={tab.key}
+                type="button"
                 onClick={() => onNavigate(tab.key)}
                 className={tabClass(state)}
+                {...(state === 'active' ? { 'aria-current': 'page' } : {})}
               >
                 {tabLabel(tab.label, state)}
               </button>
