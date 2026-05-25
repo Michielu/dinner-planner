@@ -11,9 +11,9 @@ const STORES = [
  * Props:
  *   onNext: (selectedStaples: Array<{id, name, store, notes}>) => void
  */
-export function StapleChecker({ onNext }) {
+export function StapleChecker({ onNext, initialSelected = [] }) {
   const { staples, addStaple } = useStaples()
-  const [selected, setSelected] = useState([])
+  const [selected, setSelected] = useState(initialSelected)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
   const [newStore, setNewStore] = useState('aldi')

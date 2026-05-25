@@ -62,7 +62,7 @@ export default function PlannerPage() {
   )
 
   return (
-    <PlannerShell phase={phase} visitedPhases={visitedPhases} onNavigate={navigate}>
+    <PlannerShell phase={phase} visitedPhases={visitedPhases} onNavigate={navigate} onReset={handleReset}>
       {activeDay && (
         <RecipePicker
           recipes={recipes}
@@ -76,30 +76,25 @@ export default function PlannerPage() {
 
       {phase === 'staples' && (
         <div className="max-w-md mx-auto p-8">
-          <StapleChecker onNext={handleStaplesNext} />
+          <StapleChecker onNext={handleStaplesNext} initialSelected={selectedStaples} />
         </div>
       )}
 
       {phase === 'pantry' && (
         <div className="max-w-md mx-auto p-8">
-          <PantryInput onStart={handlePantryStart} />
+          <PantryInput onStart={handlePantryStart} initialSelected={pantryItems} />
         </div>
       )}
 
       {phase === 'plan' && (
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">This Week</h1>
-              {pantryItems.length > 0 && (
-                <p className="text-sm text-garden-patch mt-0.5 font-bold">
-                  Using up: {pantryItems.map(i => i.name).join(', ')}
-                </p>
-              )}
-            </div>
-            <button onClick={handleReset} className="text-sm text-stone-grey hover:text-soil-shadow font-bold">
-              ↺ Start over
-            </button>
+          <div className="mb-6">
+            <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">This Week</h1>
+            {pantryItems.length > 0 && (
+              <p className="text-sm text-garden-patch mt-0.5 font-bold">
+                Using up: {pantryItems.map(i => i.name).join(', ')}
+              </p>
+            )}
           </div>
 
           <WeekGrid slots={slots} onSlotClick={handleSlotClick} />

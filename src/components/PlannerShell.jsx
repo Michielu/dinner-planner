@@ -27,27 +27,38 @@ function tabLabel(label, state) {
  *   onNavigate: (phase: string) => void
  *   children: React.ReactNode
  */
-export function PlannerShell({ phase, visitedPhases, onNavigate, children }) {
+export function PlannerShell({ phase, visitedPhases, onNavigate, onReset, children }) {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <div className="bg-willow-mist rounded-card shadow-card overflow-hidden">
         {/* Tab bar */}
-        <div role="tablist" className="flex border-b-2 border-willow-mist bg-willow-mist/50">
-          {TABS.map(tab => {
-            const state = getTabState(tab.key, phase, visitedPhases)
-            return (
-              <button
-                key={tab.key}
-                role="tab"
-                type="button"
-                aria-selected={state === 'active'}
-                onClick={() => onNavigate(tab.key)}
-                className={tabClass(state)}
-              >
-                {tabLabel(tab.label, state)}
-              </button>
-            )
-          })}
+        <div className="flex items-center border-b-2 border-willow-mist bg-willow-mist/50">
+          <div role="tablist" className="flex flex-1">
+            {TABS.map(tab => {
+              const state = getTabState(tab.key, phase, visitedPhases)
+              return (
+                <button
+                  key={tab.key}
+                  role="tab"
+                  type="button"
+                  aria-selected={state === 'active'}
+                  onClick={() => onNavigate(tab.key)}
+                  className={tabClass(state)}
+                >
+                  {tabLabel(tab.label, state)}
+                </button>
+              )
+            })}
+          </div>
+          {onReset && (
+            <button
+              type="button"
+              onClick={onReset}
+              className="px-4 py-3 text-xs text-stone-grey hover:text-soil-shadow font-bold shrink-0 transition-colors"
+            >
+              ↺ Start over
+            </button>
+          )}
         </div>
 
         {/* Step content */}

@@ -11,10 +11,10 @@ const STORES = [
  * Props:
  *   onStart: (selectedIngredients: Array<{id, name, store}>) => void
  */
-export function PantryInput({ onStart }) {
+export function PantryInput({ onStart, initialSelected = [] }) {
   const { ingredients, findOrCreate } = useIngredients()
   const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState([])
+  const [selected, setSelected] = useState(initialSelected)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
   const [newStore, setNewStore] = useState('aldi')

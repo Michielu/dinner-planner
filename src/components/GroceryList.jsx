@@ -47,7 +47,7 @@ export function GroceryList({ slots, recipes, staples }) {
         <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow">Grocery List</h2>
       </div>
 
-      <div className="overflow-y-auto px-6 py-5">
+      <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
         {total === 0 ? (
           <p className="text-center text-stone-grey py-8">No meals planned yet — nothing to buy.</p>
         ) : (
