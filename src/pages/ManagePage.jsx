@@ -87,14 +87,17 @@ export default function ManagePage() {
     try {
       await addExtra(newExtra.name.trim(), newExtra.store)
       setNewExtra({ name: '', store: 'aldi' })
+      setExtrasSearch('')
     } catch {
       showToast("Couldn't save item, try again")
     }
   }
 
   async function handleRemoveExtra(id) {
+    if (!confirm('Remove this item from the extras list?')) return
     try {
       await removeExtra(id)
+      if (extras.length === 1) setExtrasSearch('')
     } catch {
       showToast("Couldn't remove item, try again")
     }
@@ -218,7 +221,7 @@ export default function ManagePage() {
 
         {extras.length > 0 && (
           <div className="relative mb-3">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-grey text-sm">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-grey text-sm" aria-hidden="true">🔍</span>
             <input
               value={extrasSearch}
               onChange={e => setExtrasSearch(e.target.value)}
@@ -229,14 +232,14 @@ export default function ManagePage() {
         )}
 
         <ul className="space-y-2 mb-4">
-          {filteredExtras.map(e => (
-            <li key={e.id} className="flex items-center justify-between bg-willow-mist rounded-2xl px-5 py-3 shadow-card">
+          {filteredExtras.map(extra => (
+            <li key={extra.id} className="flex items-center justify-between bg-willow-mist rounded-2xl px-5 py-3 shadow-card">
               <div>
-                <span className="font-bold text-soil-shadow">{e.name}</span>
-                <span className="text-xs text-stone-grey ml-2">{STORES.find(s => s.value === e.store)?.label}</span>
+                <span className="font-bold text-soil-shadow">{extra.name}</span>
+                <span className="text-xs text-stone-grey ml-2">{STORES.find(s => s.value === extra.store)?.label}</span>
               </div>
               <button
-                onClick={() => handleRemoveExtra(e.id)}
+                onClick={() => handleRemoveExtra(extra.id)}
                 className="text-stone-grey hover:text-red-500 text-sm font-bold transition-colors"
               >
                 Remove
