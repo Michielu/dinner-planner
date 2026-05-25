@@ -28,7 +28,7 @@ export function RecipePicker({ recipes, categories, pantryItems, onSelect, onClo
 
   const byCategory = filterCategory === 'all'
     ? bySearch
-    : bySearch.filter(r => r.category_id === filterCategory)
+    : bySearch.filter(r => r.category?.id === filterCategory)
 
   const matches = byCategory.filter(matchesPantry)
   const rest = byCategory.filter(r => !matchesPantry(r))
