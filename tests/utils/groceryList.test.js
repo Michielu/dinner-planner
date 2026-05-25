@@ -32,10 +32,10 @@ describe('generateGroceryList', () => {
     ]
     const result = generateGroceryList(slots, RECIPES, [])
     expect(result.aldi).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'pasta', isStaple: false }),
+      expect.objectContaining({ name: 'pasta', isStaple: false, isExtra: false }),
     ]))
     expect(result.sams_club).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'ground beef', isStaple: false }),
+      expect.objectContaining({ name: 'ground beef', isStaple: false, isExtra: false }),
     ]))
     expect(result.target).toEqual([])
   })
@@ -77,10 +77,10 @@ describe('generateGroceryList', () => {
     const slots = []
     const result = generateGroceryList(slots, RECIPES, STAPLES)
     expect(result.sams_club).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'yogurt', isStaple: true, notes: 'check if running low' }),
+      expect.objectContaining({ name: 'yogurt', isStaple: true, isExtra: false, notes: 'check if running low' }),
     ]))
     expect(result.aldi).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'fruit', isStaple: true, notes: null }),
+      expect.objectContaining({ name: 'fruit', isStaple: true, isExtra: false, notes: null }),
     ]))
   })
 
@@ -116,6 +116,18 @@ describe('generateGroceryList', () => {
     expect(result.other).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'Specialty sauce', isExtra: true, id: 'e2' }),
+      ])
+    )
+  })
+
+  it('extras coexist in the same store bucket as recipe ingredients', () => {
+    const slots = [{ day: 'monday', type: 'recipe', recipeId: 'r1' }]
+    const extras = [{ id: 'e1', name: 'Paper towels', store: 'sams_club' }]
+    const result = generateGroceryList(slots, RECIPES, [], extras)
+    expect(result.sams_club).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'ground beef', isExtra: false }),
+        expect.objectContaining({ name: 'Paper towels', isExtra: true, id: 'e1' }),
       ])
     )
   })

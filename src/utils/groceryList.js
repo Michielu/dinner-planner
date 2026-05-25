@@ -34,16 +34,18 @@ export function generateGroceryList(slots, recipes, staples, extras = []) {
   const result = { sams_club: [], aldi: [], target: [] }
 
   for (const item of ingredientMap.values()) {
+    if (!result[item.store]) result[item.store] = []
     result[item.store].push({ name: item.name, isStaple: false, isExtra: false, meals: item.meals })
   }
 
   for (const staple of staples) {
+    if (!result[staple.store]) result[staple.store] = []
     result[staple.store].push({ name: staple.name, isStaple: true, isExtra: false, notes: staple.notes ?? null })
   }
 
   for (const extra of extras) {
     if (!result[extra.store]) result[extra.store] = []
-    result[extra.store].push({ name: extra.name, isStaple: false, isExtra: true, id: extra.id, meals: [] })
+    result[extra.store].push({ name: extra.name, isStaple: false, isExtra: true, id: extra.id, meals: [] }) // extras never have associated meals
   }
 
   return result
