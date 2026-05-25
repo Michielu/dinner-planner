@@ -59,8 +59,8 @@ export function PantryInput({ onStart }) {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-willow-mist rounded-card p-8 shadow-card">
-      <p className="text-xs font-bold tracking-widest uppercase text-garden-patch mb-1">Step 2 of 2</p>
+    <>
+      <p className="text-xs font-bold tracking-widest uppercase text-garden-patch mb-1">Step 2 of 4</p>
       <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow mb-1">Pantry check</h2>
       <p className="text-sm text-stone-grey mb-5">What needs using up this week?</p>
 
@@ -152,6 +152,6 @@ export function PantryInput({ onStart }) {
       >
         Skip — nothing to use up
       </button>
-    </div>
+    </>
   )
 }

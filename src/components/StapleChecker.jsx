@@ -68,8 +68,8 @@ export function StapleChecker({ onNext }) {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-16 bg-willow-mist rounded-card p-8 shadow-card">
-      <p className="text-xs font-bold tracking-widest uppercase text-garden-patch mb-1">Step 1 of 2</p>
+    <>
+      <p className="text-xs font-bold tracking-widest uppercase text-garden-patch mb-1">Step 1 of 4</p>
       <h2 className="font-display font-light text-3xl tracking-tight text-soil-shadow mb-1">Staple check</h2>
       <p className="text-sm text-stone-grey mb-6">Check off what you need this week.</p>
 
@@ -141,6 +141,6 @@ export function StapleChecker({ onNext }) {
       >
         Skip — no staples this week
       </button>
-    </div>
+    </>
   )
 }
