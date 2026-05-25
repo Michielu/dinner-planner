@@ -97,4 +97,26 @@ describe('generateGroceryList', () => {
     const result = generateGroceryList([], [], [])
     expect(result).toEqual({ sams_club: [], aldi: [], target: [] })
   })
+
+  it('appends extras into their store bucket with isExtra: true and id', () => {
+    const extras = [
+      { id: 'e1', name: 'Paper towels', store: 'sams_club' },
+    ]
+    const result = generateGroceryList([], [], [], extras)
+    expect(result.sams_club).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Paper towels', isExtra: true, id: 'e1', isStaple: false }),
+      ])
+    )
+  })
+
+  it('creates store bucket dynamically if store key is missing (e.g. "other")', () => {
+    const extras = [{ id: 'e2', name: 'Specialty sauce', store: 'other' }]
+    const result = generateGroceryList([], [], [], extras)
+    expect(result.other).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Specialty sauce', isExtra: true, id: 'e2' }),
+      ])
+    )
+  })
 })
