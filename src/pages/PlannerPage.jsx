@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
+import { useGroceryExtras } from '../hooks/useGroceryExtras'
 import { PlannerShell } from '../components/PlannerShell'
 import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
@@ -14,6 +15,7 @@ const EMPTY_SLOTS = {
 
 export default function PlannerPage() {
   const { recipes, categories, loading } = useRecipes()
+  const { extras, addExtra, removeExtra } = useGroceryExtras()
 
   // phase: 'staples' | 'pantry' | 'plan' | 'grocery'
   const [phase, setPhase] = useState('staples')
@@ -115,6 +117,9 @@ export default function PlannerPage() {
           slots={slots}
           recipes={recipes}
           staples={selectedStaples}
+          extras={extras}
+          onAddExtra={addExtra}
+          onRemoveExtra={removeExtra}
         />
       )}
     </PlannerShell>
