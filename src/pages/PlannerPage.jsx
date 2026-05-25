@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
+import { PlannerShell } from '../components/PlannerShell'
 import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
 import { WeekGrid } from '../components/WeekGrid'
@@ -14,21 +15,27 @@ const EMPTY_SLOTS = {
 export default function PlannerPage() {
   const { recipes, categories, loading } = useRecipes()
 
-  // phase: 'staples' | 'pantry' | 'planning' | 'grocery'
+  // phase: 'staples' | 'pantry' | 'plan' | 'grocery'
   const [phase, setPhase] = useState('staples')
+  const [visitedPhases, setVisitedPhases] = useState(new Set(['staples']))
   const [selectedStaples, setSelectedStaples] = useState([])
   const [pantryItems, setPantryItems] = useState([])
   const [slots, setSlots] = useState(EMPTY_SLOTS)
   const [activeDay, setActiveDay] = useState(null)
 
+  function navigate(nextPhase) {
+    setPhase(nextPhase)
+    setVisitedPhases(prev => new Set([...prev, nextPhase]))
+  }
+
   function handleStaplesNext(chosen) {
     setSelectedStaples(chosen)
-    setPhase('pantry')
+    navigate('pantry')
   }
 
   function handlePantryStart(items) {
     setPantryItems(items)
-    setPhase('planning')
+    navigate('plan')
   }
 
   function handleSlotClick(day) {
@@ -46,17 +53,15 @@ export default function PlannerPage() {
     setSelectedStaples([])
     setActiveDay(null)
     setPhase('staples')
+    setVisitedPhases(new Set(['staples']))
   }
 
   if (loading) return (
     <div className="p-6 text-stone-grey font-body">Loading…</div>
   )
 
-  if (phase === 'staples') return <StapleChecker onNext={handleStaplesNext} />
-  if (phase === 'pantry')  return <PantryInput onStart={handlePantryStart} />
-
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <PlannerShell phase={phase} visitedPhases={visitedPhases} onNavigate={navigate}>
       {activeDay && (
         <RecipePicker
           recipes={recipes}
@@ -68,39 +73,54 @@ export default function PlannerPage() {
         />
       )}
 
+      {phase === 'staples' && (
+        <div className="max-w-md mx-auto p-8">
+          <StapleChecker onNext={handleStaplesNext} />
+        </div>
+      )}
+
+      {phase === 'pantry' && (
+        <div className="max-w-md mx-auto p-8">
+          <PantryInput onStart={handlePantryStart} />
+        </div>
+      )}
+
+      {phase === 'plan' && (
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">This Week</h1>
+              {pantryItems.length > 0 && (
+                <p className="text-sm text-garden-patch mt-0.5 font-bold">
+                  Using up: {pantryItems.map(i => i.name).join(', ')}
+                </p>
+              )}
+            </div>
+            <button onClick={handleReset} className="text-sm text-stone-grey hover:text-soil-shadow font-bold">
+              ↺ Start over
+            </button>
+          </div>
+
+          <WeekGrid slots={slots} onSlotClick={handleSlotClick} />
+
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => navigate('grocery')}
+              className="bg-fresh-herb text-soil-shadow font-bold px-8 py-3 rounded-pill shadow-card hover:opacity-90 transition-opacity"
+            >
+              Grocery list →
+            </button>
+          </div>
+        </div>
+      )}
+
       {phase === 'grocery' && (
         <GroceryList
           slots={slots}
           recipes={recipes}
           staples={selectedStaples}
-          onClose={() => setPhase('planning')}
         />
       )}
-
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">This Week</h1>
-          {pantryItems.length > 0 && (
-            <p className="text-sm text-garden-patch mt-0.5 font-bold">
-              Using up: {pantryItems.map(i => i.name).join(', ')}
-            </p>
-          )}
-        </div>
-        <button onClick={handleReset} className="text-sm text-stone-grey hover:text-soil-shadow font-bold">
-          ↺ Start over
-        </button>
-      </div>
-
-      <WeekGrid slots={slots} onSlotClick={handleSlotClick} />
-
-      <div className="mt-6 flex justify-end">
-        <button
-          onClick={() => setPhase('grocery')}
-          className="bg-fresh-herb text-soil-shadow font-bold px-8 py-3 rounded-pill shadow-card hover:opacity-90 transition-opacity"
-        >
-          Generate grocery list →
-        </button>
-      </div>
-    </div>
+    </PlannerShell>
   )
 }
