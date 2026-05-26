@@ -24,6 +24,16 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
   const list = generateGroceryList(slotArray, recipes, staples, extras)
   const total = Object.values(list).reduce((sum, items) => sum + items.length, 0)
 
+  // Staple columns — stores that have at least one staple
+  const stapleColumns = STORES
+    .map(s => ({ store: s, items: (list[s.value] ?? []).filter(i => i.isStaple) }))
+    .filter(col => col.items.length > 0)
+
+  // Extra columns — stores that have at least one non-staple item
+  const extraColumns = STORES
+    .map(s => ({ store: s, items: (list[s.value] ?? []).filter(i => !i.isStaple) }))
+    .filter(col => col.items.length > 0)
+
   async function handleAddExtra() {
     if (!newExtraName.trim()) return
     try {
@@ -37,15 +47,27 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
   }
 
   async function copyList() {
-    const lines = STORES
-      .filter(s => list[s.value]?.length > 0)
-      .flatMap(s => [
-        s.label,
-        ...list[s.value].map(i => `  □ ${i.name}${i.isStaple ? ' ★' : ''}`),
-        '',
-      ])
+    const lines = []
+    if (stapleColumns.length > 0) {
+      lines.push('Staples')
+      for (const { store, items } of stapleColumns) {
+        lines.push(`  ${store.label}`)
+        for (const item of items) lines.push(`    □ ${item.name}`)
+      }
+      lines.push('')
+    }
+    if (extraColumns.length > 0) {
+      lines.push('Extra Grocery Items')
+      for (const { store, items } of extraColumns) {
+        lines.push(`  ${store.label}`)
+        for (const item of items) {
+          const meals = item.meals?.length ? ` (${item.meals.join(', ')})` : ''
+          lines.push(`    □ ${item.name}${meals}`)
+        }
+      }
+    }
     try {
-      await navigator.clipboard.writeText(lines.join('\n'))
+      await navigator.clipboard.writeText(lines.join('\n').trim())
       setCopyStatus('copied')
       setTimeout(() => setCopyStatus(null), 2000)
     } catch {
@@ -110,50 +132,69 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
         {total === 0 ? (
           <p className="text-center text-stone-grey py-8">No meals planned yet — nothing to buy.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {STORES.map(store => {
-              const items = list[store.value] ?? []
-              return (
-                <div key={store.value}>
-                  <h3 className="font-bold text-xs text-garden-patch mb-3 uppercase tracking-widest">{store.label}</h3>
-                  {items.length === 0 ? (
-                    <p className="text-xs text-stone-grey/50">Nothing from here</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {items.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-stone-grey mt-0.5 shrink-0">□</span>
-                          <span className="flex-1">
-                            <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
-                            {item.isStaple && (
-                              <span className="ml-1 text-xs text-fresh-herb font-bold">★</span>
-                            )}
-                            {item.notes && (
-                              <span className="block text-xs text-stone-grey">{item.notes}</span>
-                            )}
-                            {!item.isStaple && !item.isExtra && item.meals?.length > 0 && (
-                              <span className="block text-xs text-stone-grey">{item.meals.join(', ')}</span>
-                            )}
-                          </span>
-                          {item.isExtra && onRemoveExtra && (
-                            <button
-                              onClick={() => onRemoveExtra(item.id)}
-                              className="text-stone-grey hover:text-red-500 text-base leading-none transition-colors shrink-0 mt-0.5"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+          <div className="space-y-8">
+            {/* Staples section */}
+            {stapleColumns.length > 0 && (
+              <div>
+                <h3 className="font-display font-light text-lg text-soil-shadow mb-3">Staples</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {stapleColumns.map(({ store, items }) => (
+                    <div key={store.value}>
+                      <h4 className="font-bold text-xs text-garden-patch mb-3 uppercase tracking-widest">{store.label}</h4>
+                      <ul className="space-y-2">
+                        {items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-stone-grey mt-0.5 shrink-0">□</span>
+                            <span className="flex-1">
+                              <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
+                              {item.notes && (
+                                <span className="block text-xs text-stone-grey">{item.notes}</span>
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
-              )
-            })}
+              </div>
+            )}
+
+            {/* Extra Grocery Items section */}
+            {extraColumns.length > 0 && (
+              <div>
+                <h3 className="font-display font-light text-lg text-soil-shadow mb-3">Extra Grocery Items</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {extraColumns.map(({ store, items }) => (
+                    <div key={store.value}>
+                      <h4 className="font-bold text-xs text-garden-patch mb-3 uppercase tracking-widest">{store.label}</h4>
+                      <ul className="space-y-2">
+                        {items.map((item, i) => (
+                          <li key={item.isExtra ? item.id : i} className="flex items-start gap-2">
+                            <span className="text-stone-grey mt-0.5 shrink-0">□</span>
+                            <span className="flex-1">
+                              <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
+                              {item.meals?.length > 0 && (
+                                <span className="block text-xs text-stone-grey">{item.meals.join(', ')}</span>
+                              )}
+                            </span>
+                            {item.isExtra && onRemoveExtra && (
+                              <button
+                                onClick={() => onRemoveExtra(item.id)}
+                                className="text-stone-grey hover:text-red-500 text-base leading-none transition-colors shrink-0 mt-0.5"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        {total > 0 && (
-          <p className="text-xs text-stone-grey mt-6">★ staple — check if you have enough</p>
         )}
       </div>
 
