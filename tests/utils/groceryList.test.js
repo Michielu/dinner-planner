@@ -93,9 +93,9 @@ describe('generateGroceryList', () => {
     expect(result.aldi).toHaveLength(2) // pasta + fruit
   })
 
-  it('returns empty store arrays when nothing is planned and no staples', () => {
+  it('includes other: [] in empty result', () => {
     const result = generateGroceryList([], [], [])
-    expect(result).toEqual({ sams_club: [], aldi: [], target: [] })
+    expect(result).toEqual({ sams_club: [], aldi: [], target: [], other: [] })
   })
 
   it('appends extras into their store bucket with isExtra: true and id', () => {
@@ -128,6 +128,23 @@ describe('generateGroceryList', () => {
       expect.arrayContaining([
         expect.objectContaining({ name: 'ground beef', isExtra: false }),
         expect.objectContaining({ name: 'Paper towels', isExtra: true, id: 'e1' }),
+      ])
+    )
+  })
+
+  it('groups ingredients with store "other" into result.other', () => {
+    const recipesWithOther = [
+      {
+        id: 'r3',
+        name: 'Mystery Meal',
+        ingredients: [{ id: 'i4', name: 'specialty sauce', store: 'other' }],
+      },
+    ]
+    const slots = [{ day: 'monday', type: 'recipe', recipeId: 'r3' }]
+    const result = generateGroceryList(slots, recipesWithOther, [])
+    expect(result.other).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'specialty sauce', isStaple: false }),
       ])
     )
   })

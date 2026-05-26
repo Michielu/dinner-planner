@@ -1,3 +1,5 @@
+import { STORES } from './stores.js'
+
 /**
  * Generates a grocery list grouped by store.
  *
@@ -31,7 +33,7 @@ export function generateGroceryList(slots, recipes, staples, extras = []) {
     }
   }
 
-  const result = { sams_club: [], aldi: [], target: [] }
+  const result = Object.fromEntries(STORES.map(s => [s.value, []]))
 
   for (const item of ingredientMap.values()) {
     if (!result[item.store]) result[item.store] = []
