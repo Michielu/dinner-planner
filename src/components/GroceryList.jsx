@@ -52,7 +52,7 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
       lines.push('Staples')
       for (const { store, items } of stapleColumns) {
         lines.push(`  ${store.label}`)
-        for (const item of items) lines.push(`    □ ${item.name}`)
+        for (const item of items) lines.push(`    □ ${item.name}${item.notes ? ` — ${item.notes}` : ''}`)
       }
       lines.push('')
     }
