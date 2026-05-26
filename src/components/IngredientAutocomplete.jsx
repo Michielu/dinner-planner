@@ -1,10 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-
-const STORES = [
-  { value: 'sams_club', label: "Sam's Club" },
-  { value: 'aldi', label: 'Aldi' },
-  { value: 'target', label: 'Target' },
-]
+import { STORES } from '../utils/stores'
 
 /**
  * A single ingredient row: name autocomplete + store selector + remove button.

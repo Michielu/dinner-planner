@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useStaples } from '../hooks/useStaples'
-
-const STORES = [
-  { value: 'sams_club', label: "Sam's Club" },
-  { value: 'aldi', label: 'Aldi' },
-  { value: 'target', label: 'Target' },
-]
+import { STORES } from '../utils/stores'
 
 /**
  * Props:

@@ -1,11 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useIngredients } from '../hooks/useIngredients'
-
-const STORES = [
-  { value: 'sams_club', label: "Sam's Club" },
-  { value: 'aldi', label: 'Aldi' },
-  { value: 'target', label: 'Target' },
-]
+import { STORES } from '../utils/stores'
 
 /**
  * Props:
