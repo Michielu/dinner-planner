@@ -12,7 +12,7 @@ create policy "anon_all" on meal_categories for all to anon using (true) with ch
 create table ingredients (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  store text not null check (store in ('sams_club', 'aldi', 'target')),
+  store text not null check (store in ('sams_club', 'aldi', 'target', 'other')),
   constraint ingredients_name_unique unique (name)
 );
 
@@ -45,7 +45,7 @@ create policy "anon_all" on recipe_ingredients for all to anon using (true) with
 create table staple_items (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  store text not null check (store in ('sams_club', 'aldi', 'target')),
+  store text not null check (store in ('sams_club', 'aldi', 'target', 'other')),
   notes text
 );
 
