@@ -1,12 +1,6 @@
 import { useState } from 'react'
 import { generateGroceryList } from '../utils/groceryList'
-
-const STORE_CONFIG = [
-  { value: 'sams_club', label: "Sam's Club" },
-  { value: 'aldi',      label: 'Aldi' },
-  { value: 'target',    label: 'Target' },
-  { value: 'other',     label: 'Other' },
-]
+import { STORES } from '../utils/stores'
 
 /**
  * Props:
@@ -43,7 +37,7 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
   }
 
   async function copyList() {
-    const lines = STORE_CONFIG
+    const lines = STORES
       .filter(s => list[s.value]?.length > 0)
       .flatMap(s => [
         s.label,
@@ -91,7 +85,7 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
             onChange={e => setNewExtraStore(e.target.value)}
             className="border border-willow-mist rounded-xl bg-field-cream px-2 py-2 text-sm focus:outline-none"
           >
-            {STORE_CONFIG.map(s => (
+            {STORES.map(s => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </select>
@@ -116,8 +110,8 @@ export function GroceryList({ slots, recipes, staples, extras = [], onAddExtra, 
         {total === 0 ? (
           <p className="text-center text-stone-grey py-8">No meals planned yet — nothing to buy.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {STORE_CONFIG.map(store => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {STORES.map(store => {
               const items = list[store.value] ?? []
               return (
                 <div key={store.value}>
