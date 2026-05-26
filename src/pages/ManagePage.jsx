@@ -3,13 +3,7 @@ import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
 import { useGroceryExtras } from '../hooks/useGroceryExtras'
 import { useToast, Toast } from '../components/Toast'
-
-const STORES = [
-  { value: 'sams_club', label: "Sam's Club" },
-  { value: 'aldi', label: 'Aldi' },
-  { value: 'target', label: 'Target' },
-  { value: 'other', label: 'Other' },
-]
+import { STORES } from '../utils/stores'
 
 export default function ManagePage() {
   const { categories, addCategory, deleteCategory } = useRecipes()

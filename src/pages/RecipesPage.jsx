@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
 import { RecipeForm } from '../components/RecipeForm'
 import { useToast, Toast } from '../components/Toast'
-
-const STORE_LABELS = { sams_club: "Sam's Club", aldi: 'Aldi', target: 'Target' }
+import { STORES } from '../utils/stores'
 
 export default function RecipesPage() {
   const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes()
@@ -142,7 +141,7 @@ export default function RecipesPage() {
                         className="text-xs bg-field-cream text-stone-grey px-2.5 py-0.5 rounded-pill font-bold"
                       >
                         {ing.name}
-                        <span className="text-stone-grey/60 ml-1">· {STORE_LABELS[ing.store]}</span>
+                        <span className="text-stone-grey/60 ml-1">· {STORES.find(s => s.value === ing.store)?.label}</span>
                       </span>
                     ))}
                   </div>
