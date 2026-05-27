@@ -5,11 +5,13 @@ import { useIngredients } from '../hooks/useIngredients'
 /**
  * Props:
  *   categories: Array<{id, name}>
+ *   staples: Array<{id, name, store, notes}>
  *   initial: {name, categoryId, ingredients: [{name, store, id}]} | null
  *   onSave: ({name, categoryId, ingredientIds: string[]}) => Promise<void>
+ *   onAddExtra: (name: string, store: string) => Promise<void>
  *   onCancel: () => void
  */
-export function RecipeForm({ categories, initial, onSave, onCancel }) {
+export function RecipeForm({ categories, staples, initial, onSave, onAddExtra, onCancel }) {
   const { ingredients: allIngredients, findOrCreate } = useIngredients()
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
@@ -19,6 +21,7 @@ export function RecipeForm({ categories, initial, onSave, onCancel }) {
       name: i.name,
       store: i.store,
       existingId: i.id,
+      fromStaple: false,
     }))
   )
   const [nextKey, setNextKey] = useState(initial?.ingredients?.length ?? 0)
@@ -27,7 +30,10 @@ export function RecipeForm({ categories, initial, onSave, onCancel }) {
   function addRow() {
     const key = `row-${nextKey}`
     setNextKey(k => k + 1)
-    setIngredientRows(rows => [...rows, { _key: key, name: '', store: 'aldi', existingId: null }])
+    setIngredientRows(rows => [
+      ...rows,
+      { _key: key, name: '', store: 'aldi', existingId: null, fromStaple: false },
+    ])
   }
 
   function updateRow(key, value) {
@@ -46,7 +52,25 @@ export function RecipeForm({ categories, initial, onSave, onCancel }) {
       const ingredientIds = await Promise.all(
         ingredientRows
           .filter(r => r.name.trim())
-          .map(r => r.existingId ? Promise.resolve(r.existingId) : findOrCreate(r.name, r.store))
+          .map(async r => {
+            // Path 1: already a known ingredient — use existing id directly
+            if (r.existingId) return r.existingId
+
+            // Path 2 & 3: find-or-create in ingredients table
+            const id = await findOrCreate(r.name.trim(), r.store)
+
+            // Path 3 only: add to extras if brand new (not in ingredients or staples)
+            if (!r.fromStaple) {
+              const normalised = r.name.trim().toLowerCase()
+              const inIngredients = allIngredients.some(i => i.name.toLowerCase() === normalised)
+              const inStaples = staples.some(s => s.name.toLowerCase() === normalised)
+              if (!inIngredients && !inStaples) {
+                try { await onAddExtra(r.name.trim(), r.store) } catch { /* non-critical */ }
+              }
+            }
+
+            return id
+          })
       )
       await onSave({ name: name.trim(), categoryId: categoryId || null, ingredientIds })
     } finally {
@@ -90,6 +114,7 @@ export function RecipeForm({ categories, initial, onSave, onCancel }) {
           <IngredientRow
             key={row._key}
             allIngredients={allIngredients}
+            staples={staples}
             value={row}
             onChange={v => updateRow(row._key, v)}
             onRemove={() => removeRow(row._key)}
