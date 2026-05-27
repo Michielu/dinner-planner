@@ -1,16 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { STORES } from '../utils/stores'
+import { mergeSuggestions } from '../utils/ingredientSuggestions'
 
 /**
  * A single ingredient row: name autocomplete + store selector + remove button.
  *
  * Props:
  *   allIngredients: Array<{id, name, store}>
- *   value: {name: string, store: string, existingId: string|null}
+ *   staples: Array<{id, name, store, notes}>
+ *   value: {name: string, store: string, existingId: string|null, fromStaple: boolean}
  *   onChange: (value) => void
  *   onRemove: () => void
  */
-export function IngredientRow({ allIngredients, value, onChange, onRemove }) {
+export function IngredientRow({ allIngredients, staples, value, onChange, onRemove }) {
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const containerRef = useRef(null)
@@ -27,22 +29,24 @@ export function IngredientRow({ allIngredients, value, onChange, onRemove }) {
 
   function handleNameChange(e) {
     const text = e.target.value
-    onChange({ ...value, name: text, existingId: null })
+    onChange({ ...value, name: text, existingId: null, fromStaple: false })
 
     if (text.length < 1) {
       setSuggestions([])
       setShowSuggestions(false)
       return
     }
-    const matches = allIngredients.filter(i =>
-      i.name.toLowerCase().includes(text.toLowerCase())
-    ).slice(0, 6)
+    const matches = mergeSuggestions(allIngredients, staples, text)
     setSuggestions(matches)
     setShowSuggestions(matches.length > 0)
   }
 
-  function handleSelect(ingredient) {
-    onChange({ name: ingredient.name, store: ingredient.store, existingId: ingredient.id })
+  function handleSelect(suggestion) {
+    if (suggestion._isStaple) {
+      onChange({ name: suggestion.name, store: suggestion.store, existingId: null, fromStaple: true })
+    } else {
+      onChange({ name: suggestion.name, store: suggestion.store, existingId: suggestion.id, fromStaple: false })
+    }
     setSuggestions([])
     setShowSuggestions(false)
   }
@@ -61,12 +65,19 @@ export function IngredientRow({ allIngredients, value, onChange, onRemove }) {
           <ul className="absolute z-10 mt-1 w-full bg-field-cream border border-willow-mist rounded-xl shadow-card text-sm max-h-48 overflow-y-auto">
             {suggestions.map(s => (
               <li
-                key={s.id}
+                key={`${s._isStaple ? 's' : 'i'}-${s.id}`}
                 onMouseDown={() => handleSelect(s)}
-                className="px-3 py-2 hover:bg-willow-mist cursor-pointer flex justify-between"
+                className="px-3 py-2 hover:bg-willow-mist cursor-pointer flex justify-between items-center"
               >
                 <span className="font-bold text-soil-shadow">{s.name}</span>
-                <span className="text-stone-grey text-xs">{STORES.find(st => st.value === s.store)?.label}</span>
+                <span className="flex items-center gap-1.5">
+                  {s._isStaple && (
+                    <span className="text-xs text-garden-patch font-bold">staple</span>
+                  )}
+                  <span className="text-stone-grey text-xs">
+                    {STORES.find(st => st.value === s.store)?.label}
+                  </span>
+                </span>
               </li>
             ))}
           </ul>
