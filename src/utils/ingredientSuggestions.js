@@ -11,6 +11,7 @@
  * @returns {Array<{id: string, name: string, store: string, _isStaple: boolean}>}
  */
 export function mergeSuggestions(allIngredients, staples, query, maxResults = 8) {
+  if (!query) return []
   const q = query.toLowerCase()
 
   const ingredientMatches = allIngredients

@@ -75,4 +75,17 @@ describe('mergeSuggestions', () => {
     const result = mergeSuggestions([], [], 'pasta')
     expect(result).toEqual([])
   })
+
+  it('returns empty array for empty query', () => {
+    const result = mergeSuggestions(INGREDIENTS, STAPLES, '')
+    expect(result).toEqual([])
+  })
+
+  it('applies default maxResults of 8 when not specified', () => {
+    const manyIngredients = Array.from({ length: 10 }, (_, i) => ({
+      id: `ix${i}`, name: `thing ${i}`, store: 'aldi',
+    }))
+    const result = mergeSuggestions(manyIngredients, [], 'thing')
+    expect(result).toHaveLength(8)
+  })
 })
