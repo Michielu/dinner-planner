@@ -11,7 +11,7 @@ import { useIngredients } from '../hooks/useIngredients'
  *   onAddExtra: (name: string, store: string) => Promise<void>
  *   onCancel: () => void
  */
-export function RecipeForm({ categories, staples, initial, onSave, onAddExtra, onCancel }) {
+export function RecipeForm({ categories, staples = [], initial, onSave, onAddExtra = () => Promise.resolve(), onCancel }) {
   const { ingredients: allIngredients, findOrCreate } = useIngredients()
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
@@ -56,17 +56,17 @@ export function RecipeForm({ categories, staples, initial, onSave, onAddExtra, o
             // Path 1: already a known ingredient — use existing id directly
             if (r.existingId) return r.existingId
 
+            // Snapshot membership before findOrCreate mutates the ingredients list
+            const normalised = r.name.trim().toLowerCase()
+            const inIngredients = allIngredients.some(i => i.name.toLowerCase() === normalised)
+            const inStaples = staples.some(s => s.name.toLowerCase() === normalised)
+
             // Path 2 & 3: find-or-create in ingredients table
             const id = await findOrCreate(r.name.trim(), r.store)
 
             // Path 3 only: add to extras if brand new (not in ingredients or staples)
-            if (!r.fromStaple) {
-              const normalised = r.name.trim().toLowerCase()
-              const inIngredients = allIngredients.some(i => i.name.toLowerCase() === normalised)
-              const inStaples = staples.some(s => s.name.toLowerCase() === normalised)
-              if (!inIngredients && !inStaples) {
-                try { await onAddExtra(r.name.trim(), r.store) } catch { /* non-critical */ }
-              }
+            if (!r.fromStaple && !inIngredients && !inStaples) {
+              try { await onAddExtra(r.name.trim(), r.store) } catch { /* non-critical */ }
             }
 
             return id
