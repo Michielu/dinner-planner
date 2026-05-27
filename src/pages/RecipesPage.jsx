@@ -8,7 +8,7 @@ import { STORES } from '../utils/stores'
 
 export default function RecipesPage() {
   const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes()
-  const { staples } = useStaples()
+  const { staples, loading: staplesLoading } = useStaples()
   const { addExtra } = useGroceryExtras()
   const { toast, showToast, dismissToast } = useToast()
   const [mode, setMode] = useState(null) // null | 'add' | {edit: recipe}
@@ -45,7 +45,7 @@ export default function RecipesPage() {
     }
   }
 
-  if (loading) return <div className="p-6 text-stone-grey">Loading…</div>
+  if (loading || staplesLoading) return <div className="p-6 text-stone-grey">Loading…</div>
 
   return (
     <div className="p-6 max-w-3xl mx-auto">

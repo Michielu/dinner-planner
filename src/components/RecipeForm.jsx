@@ -66,7 +66,7 @@ export function RecipeForm({ categories, staples = [], initial, onSave, onAddExt
 
             // Path 3 only: add to extras if brand new (not in ingredients or staples)
             if (!r.fromStaple && !inIngredients && !inStaples) {
-              try { await onAddExtra(r.name.trim(), r.store) } catch { /* non-critical */ }
+              try { await onAddExtra(r.name.trim(), r.store) } catch (err) { console.warn('Failed to add extra grocery item:', err) }
             }
 
             return id
