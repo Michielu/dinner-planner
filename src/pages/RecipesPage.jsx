@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
+import { useStaples } from '../hooks/useStaples'
+import { useGroceryExtras } from '../hooks/useGroceryExtras'
 import { RecipeForm } from '../components/RecipeForm'
 import { useToast, Toast } from '../components/Toast'
 import { STORES } from '../utils/stores'
 
 export default function RecipesPage() {
   const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes()
+  const { staples } = useStaples()
+  const { addExtra } = useGroceryExtras()
   const { toast, showToast, dismissToast } = useToast()
   const [mode, setMode] = useState(null) // null | 'add' | {edit: recipe}
   const [filterCategory, setFilterCategory] = useState('all')
@@ -65,8 +69,10 @@ export default function RecipesPage() {
           <h2 className="font-bold text-soil-shadow mb-4">New Recipe</h2>
           <RecipeForm
             categories={categories}
+            staples={staples}
             initial={null}
             onSave={handleAdd}
+            onAddExtra={addExtra}
             onCancel={() => setMode(null)}
           />
         </div>
@@ -103,8 +109,10 @@ export default function RecipesPage() {
             {mode?.edit?.id === recipe.id ? (
               <RecipeForm
                 categories={categories}
+                staples={staples}
                 initial={{ name: recipe.name, categoryId: recipe.category?.id, ingredients: recipe.ingredients }}
                 onSave={handleUpdate}
+                onAddExtra={addExtra}
                 onCancel={() => setMode(null)}
               />
             ) : (
