@@ -12,7 +12,7 @@ import { mergeSuggestions } from '../utils/ingredientSuggestions'
  *   onChange: (value) => void
  *   onRemove: () => void
  */
-export function IngredientRow({ allIngredients, staples, value, onChange, onRemove }) {
+export function IngredientRow({ allIngredients, staples = [], value, onChange, onRemove }) {
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const containerRef = useRef(null)
@@ -72,7 +72,7 @@ export function IngredientRow({ allIngredients, staples, value, onChange, onRemo
                 <span className="font-bold text-soil-shadow">{s.name}</span>
                 <span className="flex items-center gap-1.5">
                   {s._isStaple && (
-                    <span className="text-xs text-garden-patch font-bold">staple</span>
+                    <span className="text-xs text-garden-patch font-bold" title="In your staples list">staple</span>
                   )}
                   <span className="text-stone-grey text-xs">
                     {STORES.find(st => st.value === s.store)?.label}
