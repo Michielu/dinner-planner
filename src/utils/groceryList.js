@@ -6,13 +6,13 @@ import { STORES } from './stores.js'
  * @param {Array<{day: string, type: 'recipe'|'eating_out'|'flex', recipeId?: string}>} slots
  * @param {Array<{id: string, name: string, ingredients: Array<{id: string, name: string, store: string}>}>} recipes
  * @param {Array<{id: string, name: string, store: string, notes: string|null}>} staples
- * @param {Array<{id: string, name: string, store: string}>} extras
+ * @param {Array<{id: string, name: string, store: string}>} addedIngredients
  * @returns {Record<string, Array>} — one key per store; each holds an array of items
- *   Recipe item:  {name, isStaple: false, isExtra: false, meals: string[]}
- *   Staple item:  {name, isStaple: true,  isExtra: false, notes: string|null}
- *   Extra item:   {name, isStaple: false, isExtra: true,  id: string, meals: []}
+ *   Recipe item:  {name, isStaple: false, isAdded: false, meals: string[]}
+ *   Staple item:  {name, isStaple: true,  isAdded: false, notes: string|null}
+ *   Added item:   {name, isStaple: false, isAdded: true,  id: string}
  */
-export function generateGroceryList(slots, recipes, staples, extras = []) {
+export function generateGroceryList(slots, recipes, staples, addedIngredients = []) {
   const recipeMap = new Map(recipes.map(r => [r.id, r]))
 
   // ingredient id → {name, store, meals: string[]}
@@ -37,17 +37,17 @@ export function generateGroceryList(slots, recipes, staples, extras = []) {
 
   for (const item of ingredientMap.values()) {
     if (!result[item.store]) result[item.store] = []
-    result[item.store].push({ name: item.name, isStaple: false, isExtra: false, meals: item.meals })
+    result[item.store].push({ name: item.name, isStaple: false, isAdded: false, meals: item.meals })
   }
 
   for (const staple of staples) {
     if (!result[staple.store]) result[staple.store] = []
-    result[staple.store].push({ name: staple.name, isStaple: true, isExtra: false, notes: staple.notes ?? null })
+    result[staple.store].push({ name: staple.name, isStaple: true, isAdded: false, notes: staple.notes ?? null })
   }
 
-  for (const extra of extras) {
-    if (!result[extra.store]) result[extra.store] = []
-    result[extra.store].push({ name: extra.name, isStaple: false, isExtra: true, id: extra.id, meals: [] }) // extras never have associated meals
+  for (const ing of addedIngredients) {
+    if (!result[ing.store]) result[ing.store] = []
+    result[ing.store].push({ name: ing.name, isStaple: false, isAdded: true, id: ing.id })
   }
 
   return result

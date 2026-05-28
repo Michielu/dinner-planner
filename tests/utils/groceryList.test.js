@@ -32,10 +32,10 @@ describe('generateGroceryList', () => {
     ]
     const result = generateGroceryList(slots, RECIPES, [])
     expect(result.aldi).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'pasta', isStaple: false, isExtra: false }),
+      expect.objectContaining({ name: 'pasta', isStaple: false, isAdded: false }),
     ]))
     expect(result.sams_club).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'ground beef', isStaple: false, isExtra: false }),
+      expect.objectContaining({ name: 'ground beef', isStaple: false, isAdded: false }),
     ]))
     expect(result.target).toEqual([])
   })
@@ -77,10 +77,10 @@ describe('generateGroceryList', () => {
     const slots = []
     const result = generateGroceryList(slots, RECIPES, STAPLES)
     expect(result.sams_club).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'yogurt', isStaple: true, isExtra: false, notes: 'check if running low' }),
+      expect.objectContaining({ name: 'yogurt', isStaple: true, isAdded: false, notes: 'check if running low' }),
     ]))
     expect(result.aldi).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'fruit', isStaple: true, isExtra: false, notes: null }),
+      expect.objectContaining({ name: 'fruit', isStaple: true, isAdded: false, notes: null }),
     ]))
   })
 
@@ -98,36 +98,36 @@ describe('generateGroceryList', () => {
     expect(result).toEqual({ sams_club: [], aldi: [], target: [], other: [] })
   })
 
-  it('appends extras into their store bucket with isExtra: true and id', () => {
-    const extras = [
+  it('appends addedIngredients into their store bucket with isAdded: true and id', () => {
+    const addedIngredients = [
       { id: 'e1', name: 'Paper towels', store: 'sams_club' },
     ]
-    const result = generateGroceryList([], [], [], extras)
+    const result = generateGroceryList([], [], [], addedIngredients)
     expect(result.sams_club).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'Paper towels', isExtra: true, id: 'e1', isStaple: false }),
+        expect.objectContaining({ name: 'Paper towels', isAdded: true, id: 'e1', isStaple: false }),
       ])
     )
   })
 
   it('creates store bucket dynamically if store key is missing (e.g. "other")', () => {
-    const extras = [{ id: 'e2', name: 'Specialty sauce', store: 'other' }]
-    const result = generateGroceryList([], [], [], extras)
+    const addedIngredients = [{ id: 'e2', name: 'Specialty sauce', store: 'other' }]
+    const result = generateGroceryList([], [], [], addedIngredients)
     expect(result.other).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'Specialty sauce', isExtra: true, id: 'e2' }),
+        expect.objectContaining({ name: 'Specialty sauce', isAdded: true, id: 'e2' }),
       ])
     )
   })
 
-  it('extras coexist in the same store bucket as recipe ingredients', () => {
+  it('addedIngredients coexist in the same store bucket as recipe ingredients', () => {
     const slots = [{ day: 'monday', type: 'recipe', recipeId: 'r1' }]
-    const extras = [{ id: 'e1', name: 'Paper towels', store: 'sams_club' }]
-    const result = generateGroceryList(slots, RECIPES, [], extras)
+    const addedIngredients = [{ id: 'e1', name: 'Paper towels', store: 'sams_club' }]
+    const result = generateGroceryList(slots, RECIPES, [], addedIngredients)
     expect(result.sams_club).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'ground beef', isExtra: false }),
-        expect.objectContaining({ name: 'Paper towels', isExtra: true, id: 'e1' }),
+        expect.objectContaining({ name: 'ground beef', isAdded: false }),
+        expect.objectContaining({ name: 'Paper towels', isAdded: true, id: 'e1' }),
       ])
     )
   })
