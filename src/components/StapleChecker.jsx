@@ -6,7 +6,7 @@ import { STORES } from '../utils/stores'
  * Props:
  *   onNext: (selectedStaples: Array<{id, name, store, notes}>) => void
  */
-export function StapleChecker({ onNext, initialSelected = [] }) {
+export function StapleChecker({ onNext, initialSelected = [], onToggle }) {
   const { staples, addStaple } = useStaples()
   const [selected, setSelected] = useState(initialSelected)
   const [adding, setAdding] = useState(false)
@@ -37,11 +37,13 @@ export function StapleChecker({ onNext, initialSelected = [] }) {
   }
 
   function toggle(staple) {
-    setSelected(prev =>
-      isSelected(staple.id)
+    setSelected(prev => {
+      const next = isSelected(staple.id)
         ? prev.filter(s => s.id !== staple.id)
         : [...prev, staple]
-    )
+      onToggle?.(next)
+      return next
+    })
   }
 
   async function handleAddNew(e) {
