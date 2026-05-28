@@ -6,10 +6,13 @@ const EMPTY_SLOTS = {
   thursday: null, friday: null, saturday: null, sunday: null,
 }
 
+const VALID_PHASES = ['staples', 'pantry', 'plan']
+
 const DEFAULTS = {
   slots: EMPTY_SLOTS,
   selectedStapleIds: [],
   pantryItems: [],
+  addedIngredientIds: [],
   phase: 'staples',
   visitedPhases: ['staples'],
 }
@@ -17,12 +20,8 @@ const DEFAULTS = {
 /**
  * Owns the persisted week-plan state.
  *
- * Does NOT resolve auto-checked staples — that's done in PlannerPage using
- * resolveSelectedStaples(plan.selectedStapleIds, staples, planCreatedAt) after
- * both the plan and staples have finished loading.
- *
  * @returns {{ plan, planCreatedAt, loading, updatePlan, resetPlan }}
- *   plan: { slots, selectedStapleIds (raw), pantryItems, phase, visitedPhases }
+ *   plan: { slots, selectedStapleIds, pantryItems, addedIngredientIds, phase, visitedPhases }
  *   planCreatedAt: ISO string | null
  *   updatePlan(patch) — shallow-merges patch and upserts to Supabase (optimistic)
  *   resetPlan() — deletes the DB row and resets local state to DEFAULTS
@@ -31,7 +30,6 @@ export function useWeekPlan() {
   const [plan, setPlan] = useState(DEFAULTS)
   const [planCreatedAt, setPlanCreatedAt] = useState(null)
   const [loading, setLoading] = useState(true)
-  // Refs avoid stale-closure bugs in updatePlan/resetPlan
   const planIdRef = useRef(null)
   const planRef = useRef(DEFAULTS)
 
@@ -51,8 +49,10 @@ export function useWeekPlan() {
           slots: { ...EMPTY_SLOTS, ...(data.slots ?? {}) },
           selectedStapleIds: data.selected_staple_ids ?? [],
           pantryItems: data.pantry_items ?? [],
-          phase: data.phase ?? 'staples',
-          visitedPhases: data.visited_phases ?? ['staples'],
+          addedIngredientIds: data.added_ingredient_ids ?? [],
+          // normalize stale 'grocery' phase from old persisted data
+          phase: VALID_PHASES.includes(data.phase) ? data.phase : 'plan',
+          visitedPhases: (data.visited_phases ?? ['staples']).filter(p => VALID_PHASES.includes(p)),
         }
         planRef.current = loaded
         setPlan(loaded)
@@ -60,7 +60,7 @@ export function useWeekPlan() {
       setLoading(false)
     }
     load()
-  }, []) // runs once on mount
+  }, [])
 
   async function updatePlan(patch) {
     const next = { ...planRef.current, ...patch }
@@ -71,16 +71,15 @@ export function useWeekPlan() {
       slots: next.slots,
       selected_staple_ids: next.selectedStapleIds,
       pantry_items: next.pantryItems,
+      added_ingredient_ids: next.addedIngredientIds,
       phase: next.phase,
       visited_phases: next.visitedPhases,
       updated_at: new Date().toISOString(),
     }
 
     if (planIdRef.current) {
-      // fire-and-forget update
       supabase.from('week_plan').update(row).eq('id', planIdRef.current).then(() => {})
     } else {
-      // first write — insert and capture the new ID + created_at
       const { data } = await supabase
         .from('week_plan')
         .insert(row)
