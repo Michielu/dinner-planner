@@ -4,7 +4,6 @@ const TABS = [
   { key: 'staples', label: 'Staples' },
   { key: 'pantry',  label: 'Pantry'  },
   { key: 'plan',    label: 'Plan'    },
-  { key: 'grocery', label: 'Grocery' },
 ]
 
 function tabClass(state) {

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useRecipes } from '../hooks/useRecipes'
-import { useGroceryExtras } from '../hooks/useGroceryExtras'
 import { useStaples } from '../hooks/useStaples'
 import { useWeekPlan } from '../hooks/useWeekPlan'
 import { resolveSelectedStaples } from '../utils/weekPlan'
@@ -9,31 +9,24 @@ import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
 import { WeekGrid } from '../components/WeekGrid'
 import { RecipePicker } from '../components/RecipePicker'
-import { GroceryList } from '../components/GroceryList'
 
 export default function PlannerPage() {
+  const navigate = useNavigate()
   const { recipes, categories, loading: recipesLoading } = useRecipes()
-  const { extras, addExtra, removeExtra } = useGroceryExtras()
   const { staples, loading: staplesLoading } = useStaples()
   const { plan, planCreatedAt, loading: planLoading, updatePlan, resetPlan } = useWeekPlan()
 
-  // Transient UI state — no need to persist
   const [activeDay, setActiveDay] = useState(null)
 
   const { slots, selectedStapleIds, pantryItems, phase, visitedPhases } = plan
 
-  // Resolve: raw persisted IDs + any staples added after the plan was created.
-  // useMemo means this only runs after the loading guard passes (both staples
-  // and plan are fully loaded), avoiding the async timing race.
   const resolvedSelectedStapleIds = useMemo(
     () => resolveSelectedStaples(selectedStapleIds, staples, planCreatedAt),
     [selectedStapleIds, staples, planCreatedAt]
   )
-
-  // Full staple objects for StapleChecker and GroceryList
   const selectedStaples = staples.filter(s => resolvedSelectedStapleIds.includes(s.id))
 
-  function navigate(nextPhase) {
+  function navigatePlanner(nextPhase) {
     const updatedVisited = visitedPhases.includes(nextPhase)
       ? visitedPhases
       : [...visitedPhases, nextPhase]
@@ -85,7 +78,7 @@ export default function PlannerPage() {
     <PlannerShell
       phase={phase}
       visitedPhases={new Set(visitedPhases)}
-      onNavigate={navigate}
+      onNavigate={navigatePlanner}
       onReset={handleReset}
     >
       {activeDay && (
@@ -130,24 +123,13 @@ export default function PlannerPage() {
 
           <div className="mt-6 flex justify-end">
             <button
-              onClick={() => navigate('grocery')}
+              onClick={() => navigate('/grocery')}
               className="bg-fresh-herb text-soil-shadow font-bold px-8 py-3 rounded-pill shadow-card hover:opacity-90 transition-opacity"
             >
               Grocery list →
             </button>
           </div>
         </div>
-      )}
-
-      {phase === 'grocery' && (
-        <GroceryList
-          slots={slots}
-          recipes={recipes}
-          staples={selectedStaples}
-          extras={extras}
-          onAddExtra={addExtra}
-          onRemoveExtra={removeExtra}
-        />
       )}
     </PlannerShell>
   )
