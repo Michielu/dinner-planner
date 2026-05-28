@@ -14,7 +14,7 @@ export default function PlannerPage() {
   const navigate = useNavigate()
   const { recipes, categories, loading: recipesLoading } = useRecipes()
   const { staples, loading: staplesLoading } = useStaples()
-  const { plan, planCreatedAt, loading: planLoading, updatePlan, resetPlan } = useWeekPlan()
+  const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
 
   const [activeDay, setActiveDay] = useState(null)
 
@@ -65,11 +65,6 @@ export default function PlannerPage() {
     setActiveDay(null)
   }
 
-  async function handleReset() {
-    await resetPlan()
-    setActiveDay(null)
-  }
-
   if (recipesLoading || staplesLoading || planLoading) return (
     <div className="p-6 text-stone-grey font-body">Loading…</div>
   )
@@ -79,7 +74,6 @@ export default function PlannerPage() {
       phase={phase}
       visitedPhases={new Set(visitedPhases)}
       onNavigate={navigatePlanner}
-      onReset={handleReset}
     >
       {activeDay && (
         <RecipePicker

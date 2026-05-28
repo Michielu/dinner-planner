@@ -42,7 +42,7 @@ export function generateGroceryList(slots, recipes, staples, addedIngredients = 
 
   for (const staple of staples) {
     if (!result[staple.store]) result[staple.store] = []
-    result[staple.store].push({ name: staple.name, isStaple: true, isAdded: false, notes: staple.notes ?? null })
+    result[staple.store].push({ id: staple.id, name: staple.name, isStaple: true, isAdded: false, notes: staple.notes ?? null })
   }
 
   for (const ing of addedIngredients) {

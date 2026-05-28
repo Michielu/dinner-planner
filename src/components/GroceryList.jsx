@@ -9,8 +9,9 @@ import { STORES } from '../utils/stores'
  *   staples: Array<{id, name, store, notes}>
  *   addedIngredients: Array<{id, name, store}>
  *   onRemoveAdded: (id: string) => void
+ *   onRemoveStaple: (id: string) => void
  */
-export function GroceryList({ slots, recipes, staples, addedIngredients = [], onRemoveAdded }) {
+export function GroceryList({ slots, recipes, staples, addedIngredients = [], onRemoveAdded, onRemoveStaple }) {
   const [copyStatus, setCopyStatus] = useState(null)
 
   const slotArray = Object.entries(slots)
@@ -63,11 +64,19 @@ export function GroceryList({ slots, recipes, staples, addedIngredients = [], on
                 <h4 className="font-bold text-xs text-garden-patch mb-3 uppercase tracking-widest">{store.label}</h4>
                 <ul className="space-y-2">
                   {items.map((item, i) => (
-                    <li key={item.isAdded ? item.id : i} className="flex items-center justify-between gap-2">
+                    <li key={item.isAdded || item.isStaple ? item.id : i} className="flex items-center justify-between gap-2">
                       <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
                       {item.isAdded && onRemoveAdded ? (
                         <button
                           onClick={() => onRemoveAdded(item.id)}
+                          className="text-stone-grey hover:text-red-500 text-base leading-none transition-colors shrink-0"
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          ×
+                        </button>
+                      ) : item.isStaple && onRemoveStaple ? (
+                        <button
+                          onClick={() => onRemoveStaple(item.id)}
                           className="text-stone-grey hover:text-red-500 text-base leading-none transition-colors shrink-0"
                           aria-label={`Remove ${item.name}`}
                         >

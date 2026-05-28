@@ -26,7 +26,7 @@ function tabLabel(label, state) {
  *   onNavigate: (phase: string) => void
  *   children: React.ReactNode
  */
-export function PlannerShell({ phase, visitedPhases, onNavigate, onReset, children }) {
+export function PlannerShell({ phase, visitedPhases, onNavigate, children }) {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <div className="bg-willow-mist rounded-card shadow-card overflow-hidden">
@@ -49,15 +49,6 @@ export function PlannerShell({ phase, visitedPhases, onNavigate, onReset, childr
               )
             })}
           </div>
-          {onReset && (
-            <button
-              type="button"
-              onClick={onReset}
-              className="px-4 py-3 text-xs text-stone-grey hover:text-soil-shadow font-bold shrink-0 transition-colors"
-            >
-              ↺ Start over
-            </button>
-          )}
         </div>
 
         {/* Step content */}

@@ -11,7 +11,7 @@ export default function GroceryPage() {
   const { recipes, loading: recipesLoading } = useRecipes()
   const { staples, loading: staplesLoading } = useStaples()
   const { ingredients, loading: ingredientsLoading, findOrCreate } = useIngredients()
-  const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
+  const { plan, planCreatedAt, loading: planLoading, updatePlan, resetPlan } = useWeekPlan()
 
   const [query, setQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
@@ -88,6 +88,10 @@ export default function GroceryPage() {
     updatePlan({ addedIngredientIds: addedIngredientIds.filter(x => x !== id) })
   }
 
+  function handleRemoveStaple(id) {
+    updatePlan({ selectedStapleIds: resolvedStapleIds.filter(x => x !== id) })
+  }
+
   const loading = recipesLoading || staplesLoading || ingredientsLoading || planLoading
 
   if (loading) return (
@@ -101,6 +105,13 @@ export default function GroceryPage() {
         {/* Header */}
         <div className="px-6 py-5 border-b border-willow-mist flex items-center justify-between gap-4">
           <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">Grocery List</h1>
+          <button
+            type="button"
+            onClick={resetPlan}
+            className="text-xs text-stone-grey hover:text-soil-shadow font-bold transition-colors shrink-0"
+          >
+            ↺ Start over
+          </button>
         </div>
 
         {/* Search */}
@@ -188,6 +199,7 @@ export default function GroceryPage() {
           staples={selectedStaples}
           addedIngredients={addedIngredients}
           onRemoveAdded={handleRemoveAdded}
+          onRemoveStaple={handleRemoveStaple}
         />
 
       </div>
