@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
 import { useGroceryExtras } from '../hooks/useGroceryExtras'
+import { useStaples } from '../hooks/useStaples'
+import { useWeekPlan } from '../hooks/useWeekPlan'
+import { resolveSelectedStaples } from '../utils/weekPlan'
 import { PlannerShell } from '../components/PlannerShell'
 import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
@@ -8,37 +11,56 @@ import { WeekGrid } from '../components/WeekGrid'
 import { RecipePicker } from '../components/RecipePicker'
 import { GroceryList } from '../components/GroceryList'
 
-const EMPTY_SLOTS = {
-  monday: null, tuesday: null, wednesday: null,
-  thursday: null, friday: null, saturday: null, sunday: null,
-}
-
 export default function PlannerPage() {
-  const { recipes, categories, loading } = useRecipes()
+  const { recipes, categories, loading: recipesLoading } = useRecipes()
   const { extras, addExtra, removeExtra } = useGroceryExtras()
+  const { staples, loading: staplesLoading } = useStaples()
+  const { plan, planCreatedAt, loading: planLoading, updatePlan, resetPlan } = useWeekPlan()
 
-  // phase: 'staples' | 'pantry' | 'plan' | 'grocery'
-  const [phase, setPhase] = useState('staples')
-  const [visitedPhases, setVisitedPhases] = useState(new Set(['staples']))
-  const [selectedStaples, setSelectedStaples] = useState([])
-  const [pantryItems, setPantryItems] = useState([])
-  const [slots, setSlots] = useState(EMPTY_SLOTS)
+  // Transient UI state — no need to persist
   const [activeDay, setActiveDay] = useState(null)
 
+  const { slots, selectedStapleIds, pantryItems, phase, visitedPhases } = plan
+
+  // Resolve: raw persisted IDs + any staples added after the plan was created.
+  // useMemo means this only runs after the loading guard passes (both staples
+  // and plan are fully loaded), avoiding the async timing race.
+  const resolvedSelectedStapleIds = useMemo(
+    () => resolveSelectedStaples(selectedStapleIds, staples, planCreatedAt),
+    [selectedStapleIds, staples, planCreatedAt]
+  )
+
+  // Full staple objects for StapleChecker and GroceryList
+  const selectedStaples = staples.filter(s => resolvedSelectedStapleIds.includes(s.id))
+
   function navigate(nextPhase) {
-    setPhase(nextPhase)
-    setVisitedPhases(prev => new Set([...prev, nextPhase]))
-    setActiveDay(null) // close recipe picker on tab change
+    const updatedVisited = visitedPhases.includes(nextPhase)
+      ? visitedPhases
+      : [...visitedPhases, nextPhase]
+    updatePlan({ phase: nextPhase, visitedPhases: updatedVisited })
+    setActiveDay(null)
   }
 
   function handleStaplesNext(chosen) {
-    setSelectedStaples(chosen)
-    navigate('pantry')
+    const updatedVisited = visitedPhases.includes('pantry')
+      ? visitedPhases
+      : [...visitedPhases, 'pantry']
+    updatePlan({
+      selectedStapleIds: chosen.map(s => s.id),
+      phase: 'pantry',
+      visitedPhases: updatedVisited,
+    })
+  }
+
+  function handleStaplesToggle(updatedSelected) {
+    updatePlan({ selectedStapleIds: updatedSelected.map(s => s.id) })
   }
 
   function handlePantryStart(items) {
-    setPantryItems(items)
-    navigate('plan')
+    const updatedVisited = visitedPhases.includes('plan')
+      ? visitedPhases
+      : [...visitedPhases, 'plan']
+    updatePlan({ pantryItems: items, phase: 'plan', visitedPhases: updatedVisited })
   }
 
   function handleSlotClick(day) {
@@ -46,25 +68,26 @@ export default function PlannerPage() {
   }
 
   function handleSelect(slot) {
-    setSlots(prev => ({ ...prev, [activeDay]: slot }))
+    updatePlan({ slots: { ...slots, [activeDay]: slot } })
     setActiveDay(null)
   }
 
-  function handleReset() {
-    setSlots(EMPTY_SLOTS)
-    setPantryItems([])
-    setSelectedStaples([])
+  async function handleReset() {
+    await resetPlan()
     setActiveDay(null)
-    setPhase('staples')
-    setVisitedPhases(new Set(['staples']))
   }
 
-  if (loading) return (
+  if (recipesLoading || staplesLoading || planLoading) return (
     <div className="p-6 text-stone-grey font-body">Loading…</div>
   )
 
   return (
-    <PlannerShell phase={phase} visitedPhases={visitedPhases} onNavigate={navigate} onReset={handleReset}>
+    <PlannerShell
+      phase={phase}
+      visitedPhases={new Set(visitedPhases)}
+      onNavigate={navigate}
+      onReset={handleReset}
+    >
       {activeDay && (
         <RecipePicker
           recipes={recipes}
@@ -78,7 +101,11 @@ export default function PlannerPage() {
 
       {phase === 'staples' && (
         <div className="max-w-md mx-auto p-8">
-          <StapleChecker onNext={handleStaplesNext} initialSelected={selectedStaples} />
+          <StapleChecker
+            onNext={handleStaplesNext}
+            initialSelected={selectedStaples}
+            onToggle={handleStaplesToggle}
+          />
         </div>
       )}
 
