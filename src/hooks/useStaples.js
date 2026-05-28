@@ -9,7 +9,7 @@ export function useStaples() {
     setLoading(true)
     const { data, error } = await supabase
       .from('staple_items')
-      .select('id, name, store, notes')
+      .select('id, name, store, notes, created_at')
       .order('name')
     if (!error) setStaples(data)
     setLoading(false)
