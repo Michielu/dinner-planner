@@ -46,7 +46,8 @@ create table staple_items (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   store text not null check (store in ('sams_club', 'aldi', 'target', 'other')),
-  notes text
+  notes text,
+  created_at timestamptz not null default now()
 );
 
 alter table staple_items enable row level security;
@@ -70,3 +71,18 @@ create table grocery_extras (
 
 alter table grocery_extras enable row level security;
 create policy "anon_all" on grocery_extras for all to anon using (true) with check (true);
+
+-- Active week plan — one row at a time, persists session state across reloads
+create table week_plan (
+  id                  uuid        primary key default gen_random_uuid(),
+  slots               jsonb       not null default '{}',
+  selected_staple_ids uuid[]      not null default '{}',
+  pantry_items        jsonb       not null default '[]',
+  phase               text        not null default 'staples',
+  visited_phases      text[]      not null default '{staples}',
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
+alter table week_plan enable row level security;
+create policy "anon_all" on week_plan for all to anon using (true) with check (true);
