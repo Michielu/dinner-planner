@@ -1,25 +1,17 @@
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
-import { useGroceryExtras } from '../hooks/useGroceryExtras'
 import { useToast, Toast } from '../components/Toast'
 import { STORES } from '../utils/stores'
 
 export default function ManagePage() {
   const { categories, addCategory, deleteCategory } = useRecipes()
   const { staples, addStaple, updateStaple, deleteStaple } = useStaples()
-  const { extras, addExtra, removeExtra } = useGroceryExtras()
   const { toast, showToast, dismissToast } = useToast()
 
   const [newCategory, setNewCategory] = useState('')
   const [newStaple, setNewStaple] = useState({ name: '', store: 'aldi', notes: '' })
   const [editingStaple, setEditingStaple] = useState(null)
-  const [newExtra, setNewExtra] = useState({ name: '', store: 'aldi' })
-  const [extrasSearch, setExtrasSearch] = useState('')
-
-  const filteredExtras = extrasSearch.trim()
-    ? extras.filter(e => e.name.toLowerCase().includes(extrasSearch.toLowerCase()))
-    : extras
 
   async function handleAddCategory(e) {
     e.preventDefault()
@@ -72,28 +64,6 @@ export default function ManagePage() {
       await deleteStaple(id)
     } catch {
       showToast("Couldn't delete staple, try again")
-    }
-  }
-
-  async function handleAddExtra(e) {
-    e.preventDefault()
-    if (!newExtra.name.trim()) return
-    try {
-      await addExtra(newExtra.name.trim(), newExtra.store)
-      setNewExtra({ name: '', store: 'aldi' })
-      setExtrasSearch('')
-    } catch {
-      showToast("Couldn't save item, try again")
-    }
-  }
-
-  async function handleRemoveExtra(id) {
-    if (!confirm('Remove this item from the extras list?')) return
-    try {
-      await removeExtra(id)
-      if (extras.length === 1) setExtrasSearch('')
-    } catch {
-      showToast("Couldn't remove item, try again")
     }
   }
 
@@ -208,65 +178,6 @@ export default function ManagePage() {
         </form>
       </section>
 
-      {/* Extra Grocery Items */}
-      <section>
-        <h2 className="font-display font-light text-2xl text-soil-shadow mb-1">Extra Grocery Items</h2>
-        <p className="text-sm text-stone-grey mb-4">One-off items to grab this week — not a recurring staple.</p>
-
-        {extras.length > 0 && (
-          <div className="relative mb-3">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-grey text-sm" aria-hidden="true">🔍</span>
-            <input
-              value={extrasSearch}
-              onChange={e => setExtrasSearch(e.target.value)}
-              placeholder="Search extras…"
-              className="w-full border border-willow-mist rounded-2xl bg-field-cream pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
-            />
-          </div>
-        )}
-
-        <ul className="space-y-2 mb-4">
-          {filteredExtras.map(extra => (
-            <li key={extra.id} className="flex items-center justify-between bg-willow-mist rounded-2xl px-5 py-3 shadow-card">
-              <div>
-                <span className="font-bold text-soil-shadow">{extra.name}</span>
-                <span className="text-xs text-stone-grey ml-2">{STORES.find(s => s.value === extra.store)?.label}</span>
-              </div>
-              <button
-                onClick={() => handleRemoveExtra(extra.id)}
-                className="text-stone-grey hover:text-red-500 text-sm font-bold transition-colors"
-              >
-                Remove
-              </button>
-            </li>
-          ))}
-          {extras.length === 0 && (
-            <li className="text-stone-grey text-sm px-2">No extra items yet.</li>
-          )}
-          {extras.length > 0 && filteredExtras.length === 0 && (
-            <li className="text-stone-grey text-sm px-2">No items match "{extrasSearch}".</li>
-          )}
-        </ul>
-
-        <form onSubmit={handleAddExtra} className="flex flex-wrap gap-2">
-          <input
-            value={newExtra.name}
-            onChange={e => setNewExtra(p => ({ ...p, name: e.target.value }))}
-            placeholder="Item name (e.g. paper towels)"
-            className="flex-1 min-w-40 border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
-          />
-          <select
-            value={newExtra.store}
-            onChange={e => setNewExtra(p => ({ ...p, store: e.target.value }))}
-            className="border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
-          >
-            {STORES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
-          </select>
-          <button type="submit" className="bg-fresh-herb text-soil-shadow font-bold px-5 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm">
-            Add
-          </button>
-        </form>
-      </section>
     </div>
   )
 }

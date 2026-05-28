@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
-import { useGroceryExtras } from '../hooks/useGroceryExtras'
 import { RecipeForm } from '../components/RecipeForm'
 import { useToast, Toast } from '../components/Toast'
 import { STORES } from '../utils/stores'
@@ -9,7 +8,6 @@ import { STORES } from '../utils/stores'
 export default function RecipesPage() {
   const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes()
   const { staples, loading: staplesLoading } = useStaples()
-  const { addExtra } = useGroceryExtras()
   const { toast, showToast, dismissToast } = useToast()
   const [mode, setMode] = useState(null) // null | 'add' | {edit: recipe}
   const [filterCategory, setFilterCategory] = useState('all')
@@ -72,7 +70,6 @@ export default function RecipesPage() {
             staples={staples}
             initial={null}
             onSave={handleAdd}
-            onAddExtra={addExtra}
             onCancel={() => setMode(null)}
           />
         </div>

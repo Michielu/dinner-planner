@@ -8,10 +8,9 @@ import { useIngredients } from '../hooks/useIngredients'
  *   staples: Array<{id, name, store, notes}>
  *   initial: {name, categoryId, ingredients: [{name, store, id}]} | null
  *   onSave: ({name, categoryId, ingredientIds: string[]}) => Promise<void>
- *   onAddExtra: (name: string, store: string) => Promise<void>
  *   onCancel: () => void
  */
-export function RecipeForm({ categories, staples = [], initial, onSave, onAddExtra = () => Promise.resolve(), onCancel }) {
+export function RecipeForm({ categories, staples = [], initial, onSave, onCancel }) {
   const { ingredients: allIngredients, findOrCreate } = useIngredients()
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
@@ -63,11 +62,6 @@ export function RecipeForm({ categories, staples = [], initial, onSave, onAddExt
 
             // Path 2 & 3: find-or-create in ingredients table
             const id = await findOrCreate(r.name.trim(), r.store)
-
-            // Path 3 only: add to extras if brand new (not in ingredients or staples)
-            if (!r.fromStaple && !inIngredients && !inStaples) {
-              try { await onAddExtra(r.name.trim(), r.store) } catch (err) { console.warn('Failed to add extra grocery item:', err) }
-            }
 
             return id
           })
