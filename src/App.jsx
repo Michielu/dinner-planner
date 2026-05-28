@@ -3,6 +3,7 @@ import { ConnectionBanner } from './components/ConnectionBanner'
 import PlannerPage from './pages/PlannerPage'
 import RecipesPage from './pages/RecipesPage'
 import ManagePage from './pages/ManagePage'
+import GroceryPage from './pages/GroceryPage'
 
 function NavItem({ to, label }) {
   return (
@@ -31,12 +32,14 @@ export default function App() {
         </span>
         <NavItem to="/" label="This Week" />
         <NavItem to="/recipes" label="Recipes" />
+        <NavItem to="/grocery" label="Grocery List" />
         <NavItem to="/manage" label="Staples & Categories" />
       </nav>
       <main className="max-w-4xl mx-auto">
         <Routes>
           <Route path="/" element={<PlannerPage />} />
           <Route path="/recipes" element={<RecipesPage />} />
+          <Route path="/grocery" element={<GroceryPage />} />
           <Route path="/manage" element={<ManagePage />} />
         </Routes>
       </main>
