@@ -23,6 +23,7 @@ export default function ManagePage() {
   const [newStaple, setNewStaple] = useState({ name: '', store: 'aldi', notes: '' })
   const [editingStaple, setEditingStaple] = useState(null)
   const [editingIngredient, setEditingIngredient] = useState(null)
+  const [newIngredient, setNewIngredient] = useState({ name: '', store: 'aldi' })
   const [ingredientSearch, setIngredientSearch] = useState('')
 
   const filteredIngredients = ingredientSearch.trim()
@@ -80,6 +81,17 @@ export default function ManagePage() {
       await deleteStaple(id)
     } catch {
       showToast("Couldn't delete staple, try again")
+    }
+  }
+
+  async function handleAddIngredient(e) {
+    e.preventDefault()
+    if (!newIngredient.name.trim()) return
+    try {
+      await findOrCreate(newIngredient.name.trim(), newIngredient.store)
+      setNewIngredient({ name: '', store: 'aldi' })
+    } catch {
+      showToast("Couldn't save ingredient, try again")
     }
   }
 
@@ -283,6 +295,24 @@ export default function ManagePage() {
                   <li className="text-stone-grey text-sm px-2">No ingredients match "{ingredientSearch}".</li>
                 )}
               </ul>
+              <form onSubmit={handleAddIngredient} className="flex flex-wrap gap-2 pt-2">
+                <input
+                  value={newIngredient.name}
+                  onChange={e => setNewIngredient(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Item name (e.g. pasta)"
+                  className="flex-1 min-w-40 border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+                />
+                <select
+                  value={newIngredient.store}
+                  onChange={e => setNewIngredient(p => ({ ...p, store: e.target.value }))}
+                  className="border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+                >
+                  {STORES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                </select>
+                <button type="submit" className="bg-fresh-herb text-soil-shadow font-bold px-5 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm">
+                  Add
+                </button>
+              </form>
             </>
           )}
 
