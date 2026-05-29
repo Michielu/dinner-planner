@@ -33,5 +33,17 @@ export function useIngredients() {
     return data.id
   }
 
-  return { ingredients, loading, findOrCreate, refresh: fetchIngredients }
+  async function deleteIngredient(id) {
+    const { error } = await supabase.from('ingredients').delete().eq('id', id)
+    if (error) throw error
+    await fetchIngredients()
+  }
+
+  async function updateIngredient(id, patch) {
+    const { error } = await supabase.from('ingredients').update(patch).eq('id', id)
+    if (error) throw error
+    await fetchIngredients()
+  }
+
+  return { ingredients, loading, findOrCreate, deleteIngredient, updateIngredient, refresh: fetchIngredients }
 }

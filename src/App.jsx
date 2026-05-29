@@ -33,7 +33,7 @@ export default function App() {
         <NavItem to="/" label="This Week" />
         <NavItem to="/recipes" label="Recipes" />
         <NavItem to="/grocery" label="Grocery List" />
-        <NavItem to="/manage" label="Staples & Categories" />
+        <NavItem to="/manage" label="Catalog" />
       </nav>
       <main className="max-w-4xl mx-auto">
         <Routes>
