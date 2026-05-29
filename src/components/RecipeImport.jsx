@@ -17,6 +17,8 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
   const [phase, setPhase] = useState('url') // 'url' | 'loading' | 'review'
   const [url, setUrl] = useState('')
   const [fetchError, setFetchError] = useState('')
+  const [pasteText, setPasteText] = useState('')
+  const [pasteName, setPasteName] = useState('')
   const [recipeName, setRecipeName] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [rows, setRows] = useState([])
@@ -61,6 +63,15 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
       setFetchError(err.message)
       setPhase('url')
     }
+  }
+
+  function handlePasteReview(e) {
+    e.preventDefault()
+    const lines = pasteText.split('\n').map(l => l.trim()).filter(Boolean)
+    if (lines.length === 0) return
+    setRecipeName(pasteName)
+    setRows(buildRows(lines))
+    setPhase('review')
   }
 
   function updateRow(i, patch) {
@@ -116,12 +127,14 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
   // ── URL / loading phase ───────────────────────────────────────────────────
   if (phase === 'url' || phase === 'loading') {
     return (
-      <div className="bg-willow-mist rounded-card p-5 mb-6 shadow-card">
-        <h2 className="font-bold text-soil-shadow mb-4">Import from URL</h2>
+      <div className="bg-willow-mist rounded-card p-5 mb-6 shadow-card space-y-4">
+        <h2 className="font-bold text-soil-shadow">Import from URL</h2>
+
+        {/* URL input */}
         <form onSubmit={handleScrape} className="flex gap-2 flex-wrap">
           <input
             value={url}
-            onChange={e => setUrl(e.target.value)}
+            onChange={e => { setUrl(e.target.value); setFetchError('') }}
             placeholder="Paste a recipe URL…"
             disabled={phase === 'loading'}
             className="flex-1 min-w-60 border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb disabled:opacity-50"
@@ -141,7 +154,46 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
             Cancel
           </button>
         </form>
-        {fetchError && <p className="mt-3 text-sm text-red-500">{fetchError}</p>}
+
+        {fetchError && (
+          <>
+            <p className="text-sm text-red-500">{fetchError}</p>
+
+            {/* Paste fallback */}
+            <form onSubmit={handlePasteReview} className="space-y-3 pt-1 border-t border-willow-mist">
+              <p className="text-sm font-bold text-stone-grey">Paste ingredients instead ↓</p>
+              <input
+                value={pasteName}
+                onChange={e => setPasteName(e.target.value)}
+                placeholder="Recipe name"
+                className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+              />
+              <textarea
+                value={pasteText}
+                onChange={e => setPasteText(e.target.value)}
+                placeholder={"2 cups flour\n1 tsp salt\n1/2 cup butter, softened\n…"}
+                rows={6}
+                className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb resize-none font-mono"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="text-stone-grey text-sm font-bold px-3 hover:text-soil-shadow transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!pasteText.trim()}
+                  className="bg-fresh-herb text-soil-shadow font-bold px-6 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm disabled:opacity-50"
+                >
+                  Review →
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
     )
   }
