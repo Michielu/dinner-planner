@@ -14,7 +14,7 @@ const TABS = [
 export default function ManagePage() {
   const { categories, addCategory, deleteCategory } = useRecipes()
   const { staples, addStaple, updateStaple, deleteStaple } = useStaples()
-  const { ingredients, deleteIngredient, updateIngredient } = useIngredients()
+  const { ingredients, deleteIngredient, updateIngredient, findOrCreate } = useIngredients()
   const { toast, showToast, dismissToast } = useToast()
 
   const [activeTab, setActiveTab] = useState('staples')
@@ -105,6 +105,26 @@ export default function ManagePage() {
     }
   }
 
+  async function handleMoveToIngredients(staple) {
+    try {
+      await findOrCreate(staple.name, staple.store)
+      await deleteStaple(staple.id)
+      setActiveTab('ingredients')
+    } catch {
+      showToast("Couldn't move item, try again")
+    }
+  }
+
+  async function handleMoveToStaples(ingredient) {
+    try {
+      await addStaple({ name: ingredient.name, store: ingredient.store, notes: null })
+      await deleteIngredient(ingredient.id)
+      setActiveTab('staples')
+    } catch {
+      showToast("Couldn't move item, try again")
+    }
+  }
+
   return (
     <div className="p-6 max-w-2xl mx-auto">
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
@@ -172,6 +192,7 @@ export default function ManagePage() {
                         </div>
                         <div className="flex gap-3">
                           <button onClick={() => setEditingStaple(s)} className="text-garden-patch text-sm font-bold hover:underline">Edit</button>
+                          <button onClick={() => handleMoveToIngredients(s)} className="text-stone-grey hover:text-soil-shadow text-sm font-bold transition-colors">→ Ingredients</button>
                           <button onClick={() => handleDeleteStaple(s.id)} className="text-stone-grey hover:text-red-500 text-sm font-bold transition-colors">Remove</button>
                         </div>
                       </div>
@@ -248,6 +269,7 @@ export default function ManagePage() {
                         </div>
                         <div className="flex gap-3">
                           <button onClick={() => setEditingIngredient(ing)} className="text-garden-patch text-sm font-bold hover:underline">Edit</button>
+                          <button onClick={() => handleMoveToStaples(ing)} className="text-stone-grey hover:text-soil-shadow text-sm font-bold transition-colors">→ Staples</button>
                           <button onClick={() => handleDeleteIngredient(ing.id)} className="text-stone-grey hover:text-red-500 text-sm font-bold transition-colors">Remove</button>
                         </div>
                       </div>
