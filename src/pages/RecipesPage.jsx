@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
 import { RecipeForm } from '../components/RecipeForm'
+import { RecipeImport } from '../components/RecipeImport'
 import { useToast, Toast } from '../components/Toast'
 import { STORES } from '../utils/stores'
 
@@ -9,7 +10,7 @@ export default function RecipesPage() {
   const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes()
   const { staples, loading: staplesLoading } = useStaples()
   const { toast, showToast, dismissToast } = useToast()
-  const [mode, setMode] = useState(null) // null | 'add' | {edit: recipe}
+  const [mode, setMode] = useState(null) // null | 'add' | 'import' | {edit: recipe}
   const [filterCategory, setFilterCategory] = useState('all')
 
   const displayed = filterCategory === 'all'
@@ -52,16 +53,35 @@ export default function RecipesPage() {
       <div className="flex items-center justify-between mb-5">
         <h1 className="font-display font-light text-3xl text-soil-shadow">Recipes</h1>
         {mode === null && (
-          <button
-            onClick={() => setMode('add')}
-            className="bg-fresh-herb text-soil-shadow font-bold px-5 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm"
-          >
-            + Add Recipe
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMode('import')}
+              className="border border-garden-patch text-garden-patch font-bold px-4 py-2.5 rounded-pill hover:bg-garden-patch/10 transition-colors text-sm"
+            >
+              ↓ Import from URL
+            </button>
+            <button
+              onClick={() => setMode('add')}
+              className="bg-fresh-herb text-soil-shadow font-bold px-5 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm"
+            >
+              + Add Recipe
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Add form */}
+      {/* Import from URL */}
+      {mode === 'import' && (
+        <RecipeImport
+          categories={categories}
+          staples={staples}
+          addRecipe={addRecipe}
+          onDone={() => setMode(null)}
+          onCancel={() => setMode(null)}
+        />
+      )}
+
+      {/* Manual add form */}
       {mode === 'add' && (
         <div className="bg-willow-mist rounded-card p-5 mb-6 shadow-card">
           <h2 className="font-bold text-soil-shadow mb-4">New Recipe</h2>
@@ -109,7 +129,6 @@ export default function RecipesPage() {
                 staples={staples}
                 initial={{ name: recipe.name, categoryId: recipe.category?.id, ingredients: recipe.ingredients }}
                 onSave={handleUpdate}
-                onAddExtra={addExtra}
                 onCancel={() => setMode(null)}
               />
             ) : (
