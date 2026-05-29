@@ -115,79 +115,81 @@ export default function GroceryPage() {
         </div>
 
         {/* Search */}
-        <div className="px-6 py-4 border-b border-willow-mist relative">
-          <input
-            value={query}
-            onChange={e => {
-              setQuery(e.target.value)
-              setShowDropdown(true)
-              setAddingNew(false)
-              setSaveError(false)
-            }}
-            onFocus={() => setShowDropdown(true)}
-            onBlur={() => setTimeout(() => { setShowDropdown(false); setAddingNew(false) }, 150)}
-            onKeyDown={e => { if (e.key === 'Escape') { setShowDropdown(false); setAddingNew(false) } }}
-            placeholder="Search to add an item…"
-            className="w-full border border-willow-mist rounded-xl bg-field-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
-          />
+        <div className="px-6 py-4 border-b border-willow-mist">
+          <div className="relative">
+            <input
+              value={query}
+              onChange={e => {
+                setQuery(e.target.value)
+                setShowDropdown(true)
+                setAddingNew(false)
+                setSaveError(false)
+              }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+              onKeyDown={e => { if (e.key === 'Escape') { setShowDropdown(false); setAddingNew(false) } }}
+              placeholder="Search to add an item…"
+              className="w-full border border-willow-mist rounded-xl bg-field-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+            />
 
-          {showDropdown && query.trim() && (
-            <div className="absolute left-6 right-6 border border-willow-mist border-t-0 rounded-b-xl bg-field-cream z-10 overflow-hidden shadow-card">
-
-              {searchResults.map(item => (
-                <button
-                  key={item.id}
-                  onMouseDown={() => handleAddExisting(item)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left hover:bg-willow-mist/50 border-b border-willow-mist last:border-0"
-                >
-                  <span>
-                    <span className="font-bold text-soil-shadow">{item.name}</span>
-                    <span className="text-stone-grey ml-2 text-xs">
-                      · {STORES.find(s => s.value === item.store)?.label}
-                    </span>
-                    {item.isStaple && (
-                      <span className="ml-2 text-xs bg-willow-mist text-garden-patch px-1.5 py-0.5 rounded-full">staple</span>
-                    )}
-                  </span>
-                  <span className="text-garden-patch text-xs font-bold shrink-0 ml-2">+ Add</span>
-                </button>
-              ))}
-
-              {!hasExactMatch && (
-                addingNew ? (
-                  <div className="px-3 py-2.5 flex gap-2 items-center bg-fresh-herb/10 border-t border-willow-mist flex-wrap">
-                    <span className="text-sm font-bold text-soil-shadow flex-1 min-w-0 truncate">"{query.trim()}"</span>
-                    <select
-                      value={newItemStore}
-                      onChange={e => setNewItemStore(e.target.value)}
-                      className="border border-willow-mist rounded-lg px-2 py-1 text-sm bg-field-cream focus:outline-none"
-                    >
-                      {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                    <button
-                      onMouseDown={handleAddNew}
-                      disabled={saving}
-                      className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1 rounded-lg text-sm disabled:opacity-50"
-                    >
-                      {saving ? '…' : 'Add'}
-                    </button>
-                    <button
-                      onMouseDown={() => setAddingNew(false)}
-                      className="text-stone-grey text-sm px-1"
-                    >
-                      Cancel
-                    </button>
-                    {saveError && <span className="text-red-500 text-xs w-full">Failed to save — try again</span>}
-                  </div>
-                ) : (
+            {showDropdown && query.trim() && (searchResults.length > 0 || !hasExactMatch) && (
+              <div className="absolute left-0 right-0 border border-willow-mist border-t-0 rounded-b-xl bg-field-cream z-10 overflow-hidden shadow-card">
+                {searchResults.map(item => (
                   <button
-                    onMouseDown={() => setAddingNew(true)}
-                    className="w-full px-3 py-2.5 text-sm text-left text-garden-patch font-bold hover:bg-willow-mist/50 border-t border-willow-mist"
+                    key={item.id}
+                    onMouseDown={() => handleAddExisting(item)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left hover:bg-willow-mist/50 border-b border-willow-mist last:border-0"
+                  >
+                    <span>
+                      <span className="font-bold text-soil-shadow">{item.name}</span>
+                      <span className="text-stone-grey ml-2 text-xs">
+                        · {STORES.find(s => s.value === item.store)?.label}
+                      </span>
+                      {item.isStaple && (
+                        <span className="ml-2 text-xs bg-willow-mist text-garden-patch px-1.5 py-0.5 rounded-full">staple</span>
+                      )}
+                    </span>
+                    <span className="text-garden-patch text-xs font-bold shrink-0 ml-2">+ Add</span>
+                  </button>
+                ))}
+
+                {!hasExactMatch && (
+                  <button
+                    onMouseDown={() => { setAddingNew(true); setShowDropdown(false) }}
+                    className="w-full px-3 py-2.5 text-sm text-left text-garden-patch font-bold hover:bg-willow-mist/50 border-t border-willow-mist first:border-t-0"
                   >
                     ✚ Add "{query.trim()}" as new ingredient…
                   </button>
-                )
-              )}
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* New-item form — lives outside the dropdown so blur can't kill it */}
+          {addingNew && (
+            <div className="mt-2 flex gap-2 items-center bg-fresh-herb/10 rounded-xl px-3 py-2.5 flex-wrap">
+              <span className="text-sm font-bold text-soil-shadow flex-1 min-w-0 truncate">"{query.trim()}"</span>
+              <select
+                value={newItemStore}
+                onChange={e => setNewItemStore(e.target.value)}
+                className="border border-willow-mist rounded-lg px-2 py-1 text-sm bg-field-cream focus:outline-none"
+              >
+                {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              <button
+                onClick={handleAddNew}
+                disabled={saving}
+                className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1 rounded-lg text-sm disabled:opacity-50"
+              >
+                {saving ? '…' : 'Add'}
+              </button>
+              <button
+                onClick={() => setAddingNew(false)}
+                className="text-stone-grey text-sm px-1"
+              >
+                Cancel
+              </button>
+              {saveError && <span className="text-red-500 text-xs w-full">Failed to save — try again</span>}
             </div>
           )}
         </div>
