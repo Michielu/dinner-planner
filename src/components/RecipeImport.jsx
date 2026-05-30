@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useIngredients } from '../hooks/useIngredients'
-import { parseIngredientName, findMatches } from '../utils/ingredientParser'
+import { parseIngredientName, findMatches, preprocessPaste } from '../utils/ingredientParser'
 import { STORES } from '../utils/stores'
 
 /**
@@ -67,7 +67,7 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
 
   function handlePasteReview(e) {
     e.preventDefault()
-    const lines = pasteText.split('\n').map(l => l.trim()).filter(Boolean)
+    const lines = preprocessPaste(pasteText)
     if (lines.length === 0) return
     setRecipeName(pasteName)
     setRows(buildRows(lines))
@@ -76,6 +76,10 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
 
   function updateRow(i, patch) {
     setRows(prev => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r))
+  }
+
+  function removeRow(i) {
+    setRows(prev => prev.filter((_, idx) => idx !== i))
   }
 
   function handleMatchChange(i, value) {
@@ -128,9 +132,18 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
   if (phase === 'url' || phase === 'loading') {
     return (
       <div className="bg-willow-mist rounded-card p-5 mb-6 shadow-card space-y-4">
-        <h2 className="font-bold text-soil-shadow">Import from URL</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-soil-shadow">Import Recipe</h2>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-stone-grey text-sm font-bold hover:text-soil-shadow transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
 
-        {/* URL input */}
+        {/* URL import */}
         <form onSubmit={handleScrape} className="flex gap-2 flex-wrap">
           <input
             value={url}
@@ -146,54 +159,42 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
           >
             {phase === 'loading' ? 'Fetching…' : ingredientsLoading ? 'Loading…' : 'Import'}
           </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-stone-grey text-sm font-bold px-3 hover:text-soil-shadow transition-colors"
-          >
-            Cancel
-          </button>
         </form>
 
-        {fetchError && (
-          <>
-            <p className="text-sm text-red-500">{fetchError}</p>
+        {fetchError && <p className="text-sm text-red-500">{fetchError}</p>}
 
-            {/* Paste fallback */}
-            <form onSubmit={handlePasteReview} className="space-y-3 pt-1 border-t border-willow-mist">
-              <p className="text-sm font-bold text-stone-grey">Paste ingredients instead ↓</p>
-              <input
-                value={pasteName}
-                onChange={e => setPasteName(e.target.value)}
-                placeholder="Recipe name"
-                className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
-              />
-              <textarea
-                value={pasteText}
-                onChange={e => setPasteText(e.target.value)}
-                placeholder={"2 cups flour\n1 tsp salt\n1/2 cup butter, softened\n…"}
-                rows={6}
-                className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb resize-none font-mono"
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  className="text-stone-grey text-sm font-bold px-3 hover:text-soil-shadow transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!pasteText.trim()}
-                  className="bg-fresh-herb text-soil-shadow font-bold px-6 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm disabled:opacity-50"
-                >
-                  Review →
-                </button>
-              </div>
-            </form>
-          </>
-        )}
+        {/* Divider */}
+        <div className="flex items-center gap-3 pt-1">
+          <div className="flex-1 border-t border-stone-grey/20" />
+          <span className="text-xs text-stone-grey font-bold">or paste ingredients</span>
+          <div className="flex-1 border-t border-stone-grey/20" />
+        </div>
+
+        {/* Paste */}
+        <form onSubmit={handlePasteReview} className="space-y-3">
+          <input
+            value={pasteName}
+            onChange={e => setPasteName(e.target.value)}
+            placeholder="Recipe name"
+            className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+          />
+          <textarea
+            value={pasteText}
+            onChange={e => setPasteText(e.target.value)}
+            placeholder={"2 cups flour\n1 tsp salt\n1/2 cup butter, softened\n…"}
+            rows={5}
+            className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb resize-none font-mono"
+          />
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={!pasteText.trim()}
+              className="bg-fresh-herb text-soil-shadow font-bold px-6 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm disabled:opacity-50"
+            >
+              Review →
+            </button>
+          </div>
+        </form>
       </div>
     )
   }
@@ -266,6 +267,14 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
                         >
                           edit
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => removeRow(row.i)}
+                          className="text-stone-grey hover:text-red-500 font-bold text-sm transition-colors shrink-0"
+                          aria-label="Remove ingredient"
+                        >
+                          ×
+                        </button>
                       </>
                     )}
                   </li>
@@ -314,6 +323,14 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
                       ← use "{row.matches[0].name}"
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => removeRow(row.i)}
+                    className="text-stone-grey hover:text-red-500 font-bold text-sm transition-colors ml-auto shrink-0"
+                    aria-label="Remove ingredient"
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>

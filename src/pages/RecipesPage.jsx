@@ -44,6 +44,18 @@ export default function RecipesPage() {
     }
   }
 
+  async function handleRemoveIngredient(recipe, ingredientId) {
+    try {
+      await updateRecipe(recipe.id, {
+        name: recipe.name,
+        categoryId: recipe.category?.id ?? null,
+        ingredientIds: recipe.ingredients.filter(i => i.id !== ingredientId).map(i => i.id),
+      })
+    } catch {
+      showToast("Couldn't remove ingredient, try again")
+    }
+  }
+
   if (loading || staplesLoading) return <div className="p-6 text-stone-grey">Loading…</div>
 
   return (
@@ -162,10 +174,18 @@ export default function RecipesPage() {
                     {recipe.ingredients.map(ing => (
                       <span
                         key={ing.id}
-                        className="text-xs bg-field-cream text-stone-grey px-2.5 py-0.5 rounded-pill font-bold"
+                        className="inline-flex items-center gap-1 text-xs bg-field-cream text-stone-grey px-2.5 py-0.5 rounded-pill font-bold"
                       >
                         {ing.name}
-                        <span className="text-stone-grey/60 ml-1">· {STORES.find(s => s.value === ing.store)?.label}</span>
+                        <span className="text-stone-grey/60">· {STORES.find(s => s.value === ing.store)?.label}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveIngredient(recipe, ing.id)}
+                          className="text-stone-grey/50 hover:text-red-500 leading-none transition-colors"
+                          aria-label={`Remove ${ing.name}`}
+                        >
+                          ×
+                        </button>
                       </span>
                     ))}
                   </div>
