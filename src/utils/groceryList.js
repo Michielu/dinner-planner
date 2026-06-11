@@ -50,5 +50,9 @@ export function generateGroceryList(slots, recipes, staples, addedIngredients = 
     result[ing.store].push({ name: ing.name, isStaple: false, isAdded: true, id: ing.id })
   }
 
+  for (const store of Object.keys(result)) {
+    result[store].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+  }
+
   return result
 }
