@@ -26,24 +26,26 @@ export function WeekGrid({ slots, onSlotClick }) {
             className="w-full flex items-center gap-4 bg-willow-mist rounded-2xl px-5 py-4 shadow-card hover:opacity-90 transition-opacity text-left"
           >
             <span className="w-24 text-sm text-stone-grey font-bold tracking-wide shrink-0">{day}</span>
-            <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               {special ? (
                 <span className={`text-sm ${SLOT_SPECIAL[special.type].style}`}>
                   {SLOT_SPECIAL[special.type].label}
                 </span>
               ) : recipes.length > 0 ? (
-                <span className="text-sm text-soil-shadow font-bold uppercase">
-                  {recipes.map(s => s.recipe?.name).join(' + ')}
-                </span>
+                <>
+                  <span className="text-sm text-soil-shadow font-bold uppercase truncate">
+                    {recipes[0].recipe?.name}
+                  </span>
+                  {recipes.length > 1 && (
+                    <span className="text-xs bg-garden-patch/20 text-garden-patch rounded-full px-2 py-0.5 font-bold shrink-0">
+                      +{recipes.length - 1}
+                    </span>
+                  )}
+                </>
               ) : (
                 <span className="text-sm text-stone-grey/50">+ pick meal</span>
               )}
             </div>
-            {recipes.length > 1 && (
-              <span className="text-xs bg-garden-patch/20 text-garden-patch rounded-full px-2 py-0.5 font-bold shrink-0">
-                {recipes.length}
-              </span>
-            )}
           </button>
         )
       })}
