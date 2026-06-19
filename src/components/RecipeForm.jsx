@@ -7,13 +7,14 @@ import { useIngredients } from '../hooks/useIngredients'
  *   categories: Array<{id, name}>
  *   staples: Array<{id, name, store, notes}>
  *   stores: Array<{value, label, sort_order}>
- *   initial: {name, categoryId, ingredients: [{name, store, id}]} | null
- *   onSave: ({name, categoryId, ingredientIds: string[]}) => Promise<void>
+ *   initial: {name, categoryId, sourceUrl, ingredients: [{name, store, id}]} | null
+ *   onSave: ({name, categoryId, ingredientIds: string[], sourceUrl: string|null}) => Promise<void>
  *   onCancel: () => void
  */
 export function RecipeForm({ categories, staples = [], stores, initial, onSave, onCancel }) {
   const { ingredients: allIngredients, findOrCreate } = useIngredients()
   const [name, setName] = useState(initial?.name ?? '')
+  const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
   const [ingredientRows, setIngredientRows] = useState(
     () => (initial?.ingredients ?? []).map((i, idx) => ({
@@ -61,7 +62,7 @@ export function RecipeForm({ categories, staples = [], stores, initial, onSave, 
             return id
           })
       )
-      await onSave({ name: name.trim(), categoryId: categoryId || null, ingredientIds })
+      await onSave({ name: name.trim(), categoryId: categoryId || null, ingredientIds, sourceUrl: sourceUrl.trim() || null })
     } finally {
       setSaving(false)
     }
@@ -70,30 +71,39 @@ export function RecipeForm({ categories, staples = [], stores, initial, onSave, 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name + category */}
-      <div className="flex gap-3 flex-wrap">
-        <input
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Recipe name (e.g. Chicken Stir Fry)"
-          required
-          className="flex-1 min-w-48 border border-willow-mist rounded-xl bg-field-cream px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
-        />
-        <div className="flex flex-wrap gap-2 items-center">
-          {categories.map(c => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setCategoryId(prev => prev === c.id ? '' : c.id)}
-              className={`px-3 py-1.5 rounded-pill text-xs font-bold transition-colors ${
-                categoryId === c.id
-                  ? 'bg-garden-patch text-fresh-herb'
-                  : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
-              }`}
-            >
-              {c.name}
-            </button>
-          ))}
+      <div className="space-y-2">
+        <div className="flex gap-3 flex-wrap">
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Recipe name (e.g. Chicken Stir Fry)"
+            required
+            className="flex-1 min-w-48 border border-willow-mist rounded-xl bg-field-cream px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+          />
+          <div className="flex flex-wrap gap-2 items-center">
+            {categories.map(c => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCategoryId(prev => prev === c.id ? '' : c.id)}
+                className={`px-3 py-1.5 rounded-pill text-xs font-bold transition-colors ${
+                  categoryId === c.id
+                    ? 'bg-garden-patch text-fresh-herb'
+                    : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
         </div>
+        <input
+          value={sourceUrl}
+          onChange={e => setSourceUrl(e.target.value)}
+          placeholder="Source URL (optional)"
+          type="text"
+          className="w-full border border-willow-mist rounded-xl bg-field-cream px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+        />
       </div>
 
       {/* Ingredients */}
