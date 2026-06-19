@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { generateGroceryList } from '../utils/groceryList'
+import { slotsToFlatArray } from '../utils/weekPlan'
 
 /**
  * Props:
- *   slots: Record<string, {type, recipe?: {id, name}} | null>
+ *   slots: Record<string, slot[] | null>
  *   recipes: Array<{id, name, ingredients: [{id, name, store}]}>
  *   staples: Array<{id, name, store, notes}>
  *   addedIngredients: Array<{id, name, store}>
@@ -13,9 +14,7 @@ import { generateGroceryList } from '../utils/groceryList'
 export function GroceryList({ slots, recipes, staples, stores, addedIngredients = [], onRemoveAdded, onRemoveStaple }) {
   const [copyStatus, setCopyStatus] = useState(null)
 
-  const slotArray = Object.entries(slots)
-    .filter(([, slot]) => slot !== null)
-    .map(([day, slot]) => ({ day, ...slot, recipeId: slot?.recipe?.id }))
+  const slotArray = slotsToFlatArray(slots)
 
   const list = generateGroceryList(slotArray, recipes, staples, addedIngredients, stores)
   const total = Object.values(list).reduce((sum, items) => sum + items.length, 0)
