@@ -59,7 +59,7 @@ export default function RecipesPage() {
   if (loading || staplesLoading) return <div className="p-6 text-stone-grey">Loading…</div>
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-3xl mx-auto">
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
 
       <div className="flex items-center justify-between mb-5">
@@ -181,7 +181,7 @@ export default function RecipesPage() {
                         <button
                           type="button"
                           onClick={() => handleRemoveIngredient(recipe, ing.id)}
-                          className="text-stone-grey/50 hover:text-red-500 leading-none transition-colors"
+                          className="text-stone-grey/50 hover:text-red-500 leading-none transition-colors p-1 -m-1"
                           aria-label={`Remove ${ing.name}`}
                         >
                           ×
