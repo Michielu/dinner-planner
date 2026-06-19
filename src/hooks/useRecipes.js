@@ -15,7 +15,7 @@ export function useRecipes() {
       supabase
         .from('recipes')
         .select(`
-          id, name, created_at,
+          id, name, source_url, created_at,
           category:meal_categories(id, name),
           recipe_ingredients(
             ingredient:ingredients(id, name, store)
@@ -43,10 +43,10 @@ export function useRecipes() {
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  async function addRecipe({ name, categoryId, ingredientIds }) {
+  async function addRecipe({ name, categoryId, ingredientIds, sourceUrl }) {
     const { data: recipe, error: recipeErr } = await supabase
       .from('recipes')
-      .insert({ name, category_id: categoryId || null })
+      .insert({ name, category_id: categoryId || null, source_url: sourceUrl || null })
       .select('id')
       .single()
     if (recipeErr) throw recipeErr
@@ -60,10 +60,10 @@ export function useRecipes() {
     await fetchAll()
   }
 
-  async function updateRecipe(id, { name, categoryId, ingredientIds }) {
+  async function updateRecipe(id, { name, categoryId, ingredientIds, sourceUrl }) {
     const { error: recipeErr } = await supabase
       .from('recipes')
-      .update({ name, category_id: categoryId || null })
+      .update({ name, category_id: categoryId || null, source_url: sourceUrl || null })
       .eq('id', id)
     if (recipeErr) throw recipeErr
 
