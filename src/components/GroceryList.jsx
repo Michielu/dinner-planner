@@ -99,7 +99,7 @@ export function GroceryList({ slots, recipes, staples, addedIngredients = [], on
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-willow-mist flex justify-end">
+      <div className="px-4 py-4 sm:px-6 border-t border-willow-mist flex justify-end">
         <button
           onClick={copyList}
           className={`px-5 py-2.5 text-sm font-bold rounded-pill shadow-card transition-opacity ${
