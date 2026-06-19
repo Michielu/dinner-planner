@@ -32,7 +32,7 @@ export function RecipeForm({ categories, staples = [], stores, initial, onSave, 
     setNextKey(k => k + 1)
     setIngredientRows(rows => [
       ...rows,
-      { _key: key, name: '', store: 'aldi', existingId: null, fromStaple: false },
+      { _key: key, name: '', store: stores[0]?.value ?? 'aldi', existingId: null, fromStaple: false },
     ])
   }
 

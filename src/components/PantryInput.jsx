@@ -13,7 +13,7 @@ export function PantryInput({ stores, onStart, initialSelected = [] }) {
   const [selected, setSelected] = useState(initialSelected)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
-  const [newStore, setNewStore] = useState('aldi')
+  const [newStore, setNewStore] = useState(() => stores[0]?.value ?? 'aldi')
   const [saving, setSaving] = useState(false)
 
   const filtered = useMemo(() => {
@@ -46,7 +46,7 @@ export function PantryInput({ stores, onStart, initialSelected = [] }) {
       const ingredient = { id, name: newName.trim(), store: newStore }
       setSelected(prev => [...prev, ingredient])
       setNewName('')
-      setNewStore('aldi')
+      setNewStore(stores[0]?.value ?? 'aldi')
       setAdding(false)
       setSearch('')
     } finally {

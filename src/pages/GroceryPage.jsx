@@ -75,7 +75,7 @@ export default function GroceryPage() {
       const id = await findOrCreate(query.trim(), newItemStore)
       updatePlan({ addedIngredientIds: [...addedIngredientIds, id] })
       setQuery('')
-      setNewItemStore('aldi')
+      setNewItemStore(stores[0]?.value ?? 'aldi')
       setAddingNew(false)
       setShowDropdown(false)
     } catch {

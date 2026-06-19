@@ -24,10 +24,10 @@ export default function ManagePage() {
   const [inUseStore, setInUseStore] = useState(null)
 
   const [newCategory, setNewCategory] = useState('')
-  const [newStaple, setNewStaple] = useState({ name: '', store: 'aldi', notes: '' })
+  const [newStaple, setNewStaple] = useState(() => ({ name: '', store: stores[0]?.value ?? 'aldi', notes: '' }))
   const [editingStaple, setEditingStaple] = useState(null)
   const [editingIngredient, setEditingIngredient] = useState(null)
-  const [newIngredient, setNewIngredient] = useState({ name: '', store: 'aldi' })
+  const [newIngredient, setNewIngredient] = useState(() => ({ name: '', store: stores[0]?.value ?? 'aldi' }))
   const [ingredientSearch, setIngredientSearch] = useState('')
 
   const filteredIngredients = ingredientSearch.trim()
@@ -59,7 +59,7 @@ export default function ManagePage() {
     if (!newStaple.name.trim()) return
     try {
       await addStaple({ name: newStaple.name.trim(), store: newStaple.store, notes: newStaple.notes.trim() || null })
-      setNewStaple({ name: '', store: 'aldi', notes: '' })
+      setNewStaple({ name: '', store: stores[0]?.value ?? 'aldi', notes: '' })
     } catch {
       showToast("Couldn't save staple, try again")
     }
@@ -93,7 +93,7 @@ export default function ManagePage() {
     if (!newIngredient.name.trim()) return
     try {
       await findOrCreate(newIngredient.name.trim(), newIngredient.store)
-      setNewIngredient({ name: '', store: 'aldi' })
+      setNewIngredient({ name: '', store: stores[0]?.value ?? 'aldi' })
     } catch {
       showToast("Couldn't save ingredient, try again")
     }

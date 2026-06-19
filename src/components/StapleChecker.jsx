@@ -13,7 +13,7 @@ export function StapleChecker({ stores, onNext, initialSelected = [], onToggle }
   const [selected, setSelected] = useState(initialSelected)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
-  const [newStore, setNewStore] = useState('aldi')
+  const [newStore, setNewStore] = useState(() => stores[0]?.value ?? 'aldi')
   const [saving, setSaving] = useState(false)
   // Names pending auto-selection (after addStaple, before list refresh)
   const [pendingNames, setPendingNames] = useState(new Set())
@@ -59,7 +59,7 @@ export function StapleChecker({ stores, onNext, initialSelected = [], onToggle }
       // Queue this name for auto-selection once useStaples refreshes the list
       setPendingNames(prev => new Set([...prev, name.toLowerCase()]))
       setNewName('')
-      setNewStore('aldi')
+      setNewStore(stores[0]?.value ?? 'aldi')
       setAdding(false)
     } finally {
       setSaving(false)
