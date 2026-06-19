@@ -57,8 +57,9 @@ Empty day is `null`. No DB migration required — `slots` is JSONB and accepts e
 ### `RecipePicker.jsx`
 - Unchanged. Still returns a single selection.
 
-### `groceryList.js`
-- `generateGroceryList`: the `slots` parameter changes from a flat array of slot objects to `Object.values(slots).flat()` before the existing loop. Alternatively, update the caller to flatten before passing.
+### `GroceryList.jsx`
+- The component currently flattens `slots` into an array before calling `generateGroceryList` (line 16–18). That flatMap needs updating: each day's value is now `slot[] | null`, so `.flatMap(([day, slotArr]) => slotArr.map(slot => ({ day, ...slot, recipeId: slot?.recipe?.id })))` replaces the current `.map`.
+- `groceryList.js` itself is unchanged — it already receives a flat array.
 
 ## Interaction flow
 
