@@ -144,7 +144,7 @@ export default function GroceryPage() {
                     <span>
                       <span className="font-bold text-soil-shadow">{item.name}</span>
                       <span className="text-stone-grey ml-2 text-xs">
-                        · {stores.find(s => s.id === item.store)?.name}
+                        · {stores.find(s => s.value === item.store)?.label}
                       </span>
                       {item.isStaple && (
                         <span className="ml-2 text-xs bg-willow-mist text-garden-patch px-1.5 py-0.5 rounded-full">staple</span>
@@ -175,7 +175,7 @@ export default function GroceryPage() {
                 onChange={e => setNewItemStore(e.target.value)}
                 className="border border-willow-mist rounded-lg px-2 py-1 text-sm bg-field-cream focus:outline-none"
               >
-                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {stores.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
               <button
                 onClick={handleAddNew}
