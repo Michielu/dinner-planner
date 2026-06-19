@@ -94,17 +94,33 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
         {!picking ? (
           <>
             {/* Meal pills */}
-            <div className="overflow-y-auto px-4 pt-4 pb-2 flex flex-wrap gap-2">
-              {slots.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => onRemove(i)}
-                  className="flex items-center gap-1.5 bg-fresh-herb/30 hover:bg-red-100 text-soil-shadow hover:text-red-600 rounded-full px-3 py-2 text-sm font-bold transition-colors group"
-                >
-                  {s.type === 'recipe' ? <span className="uppercase">{s.recipe?.name}</span> : SLOT_LABEL[s.type]}
-                  <span className="text-xs opacity-50 group-hover:opacity-100">✕</span>
-                </button>
-              ))}
+            <div className="overflow-y-auto px-4 pt-4 pb-2 space-y-2">
+              {slots.map((s, i) => {
+                const sourceUrl = s.type === 'recipe'
+                  ? recipes.find(r => r.id === s.recipe?.id)?.source_url
+                  : null
+                return (
+                  <div key={i}>
+                    <button
+                      onClick={() => onRemove(i)}
+                      className="flex items-center gap-1.5 bg-fresh-herb/30 hover:bg-red-100 text-soil-shadow hover:text-red-600 rounded-full px-3 py-2 text-sm font-bold transition-colors group"
+                    >
+                      {s.type === 'recipe' ? <span className="uppercase">{s.recipe?.name}</span> : SLOT_LABEL[s.type]}
+                      <span className="text-xs opacity-50 group-hover:opacity-100">✕</span>
+                    </button>
+                    {sourceUrl && (
+                      <a
+                        href={sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block ml-3 mt-0.5 text-xs text-garden-patch hover:underline font-bold"
+                      >
+                        Source ↗
+                      </a>
+                    )}
+                  </div>
+                )
+              })}
             </div>
             <p className="px-5 text-xs text-stone-grey/60 mb-3">tap a meal to remove it</p>
             <div className="px-4 pb-5">
