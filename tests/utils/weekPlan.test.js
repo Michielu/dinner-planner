@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveSelectedStaples } from '../../src/utils/weekPlan.js'
+import { resolveSelectedStaples, normalizeSlots, slotsToFlatArray } from '../../src/utils/weekPlan.js'
 
 const PLAN_CREATED = '2026-05-26T10:00:00.000Z'
 
@@ -37,5 +37,71 @@ describe('resolveSelectedStaples', () => {
   it('returns empty array when no persisted IDs and no new staples', () => {
     const result = resolveSelectedStaples([], STAPLES.slice(0, 2), PLAN_CREATED)
     expect(result).toEqual([])
+  })
+})
+
+describe('normalizeSlots', () => {
+  it('leaves null days as null', () => {
+    const result = normalizeSlots({ monday: null, tuesday: null })
+    expect(result).toEqual({ monday: null, tuesday: null })
+  })
+
+  it('wraps a bare slot object in an array', () => {
+    const slot = { type: 'recipe', recipe: { id: 'r1', name: 'Chili' } }
+    const result = normalizeSlots({ monday: slot, tuesday: null })
+    expect(result.monday).toEqual([slot])
+    expect(result.tuesday).toBeNull()
+  })
+
+  it('leaves an already-array slot unchanged', () => {
+    const slot = { type: 'recipe', recipe: { id: 'r1', name: 'Chili' } }
+    const result = normalizeSlots({ monday: [slot] })
+    expect(result.monday).toEqual([slot])
+  })
+
+  it('handles mixed legacy and array slots', () => {
+    const bare = { type: 'eating_out' }
+    const arr = [{ type: 'recipe', recipe: { id: 'r2', name: 'Pasta' } }]
+    const result = normalizeSlots({ monday: bare, tuesday: arr, wednesday: null })
+    expect(result.monday).toEqual([bare])
+    expect(result.tuesday).toEqual(arr)
+    expect(result.wednesday).toBeNull()
+  })
+})
+
+describe('slotsToFlatArray', () => {
+  it('returns empty array when all days are null', () => {
+    const result = slotsToFlatArray({ monday: null, tuesday: null })
+    expect(result).toEqual([])
+  })
+
+  it('maps a single-recipe day to one flat entry with recipeId', () => {
+    const slots = {
+      monday: [{ type: 'recipe', recipe: { id: 'r1', name: 'Chili' } }],
+      tuesday: null,
+    }
+    const result = slotsToFlatArray(slots)
+    expect(result).toEqual([
+      { day: 'monday', type: 'recipe', recipe: { id: 'r1', name: 'Chili' }, recipeId: 'r1' },
+    ])
+  })
+
+  it('flattens two recipes on the same day into two entries', () => {
+    const slots = {
+      monday: [
+        { type: 'recipe', recipe: { id: 'r1', name: 'Chili' } },
+        { type: 'recipe', recipe: { id: 'r2', name: 'Corn Bread' } },
+      ],
+    }
+    const result = slotsToFlatArray(slots)
+    expect(result).toHaveLength(2)
+    expect(result[0]).toMatchObject({ day: 'monday', recipeId: 'r1' })
+    expect(result[1]).toMatchObject({ day: 'monday', recipeId: 'r2' })
+  })
+
+  it('includes eating_out slot with recipeId undefined', () => {
+    const slots = { monday: [{ type: 'eating_out' }] }
+    const result = slotsToFlatArray(slots)
+    expect(result).toEqual([{ day: 'monday', type: 'eating_out', recipeId: undefined }])
   })
 })

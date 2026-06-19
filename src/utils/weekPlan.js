@@ -18,3 +18,28 @@ export function resolveSelectedStaples(persistedIds, staples, planCreatedAt) {
     .map(s => s.id)
   return [...persistedIds, ...newIds]
 }
+
+/**
+ * Normalizes a slots object from Supabase so each day's value is slot[] | null.
+ * Legacy plans store a bare slot object; this wraps it in an array.
+ */
+export function normalizeSlots(slots) {
+  return Object.fromEntries(
+    Object.entries(slots).map(([day, val]) => [
+      day,
+      val === null ? null : Array.isArray(val) ? val : [val],
+    ])
+  )
+}
+
+/**
+ * Flattens a slots object into the array format expected by generateGroceryList.
+ * Each entry gets a `recipeId` field extracted from slot.recipe?.id.
+ */
+export function slotsToFlatArray(slots) {
+  return Object.entries(slots)
+    .filter(([, val]) => val !== null)
+    .flatMap(([day, slotArr]) =>
+      slotArr.map(slot => ({ day, ...slot, recipeId: slot?.recipe?.id }))
+    )
+}
