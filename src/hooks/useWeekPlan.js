@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { normalizeSlots } from '../utils/weekPlan'
 
 const EMPTY_SLOTS = {
   monday: null, tuesday: null, wednesday: null,
@@ -46,7 +47,7 @@ export function useWeekPlan() {
         planIdRef.current = data.id
         setPlanCreatedAt(data.created_at)
         const loaded = {
-          slots: { ...EMPTY_SLOTS, ...(data.slots ?? {}) },
+          slots: normalizeSlots({ ...EMPTY_SLOTS, ...(data.slots ?? {}) }),
           selectedStapleIds: data.selected_staple_ids ?? [],
           pantryItems: data.pantry_items ?? [],
           addedIngredientIds: data.added_ingredient_ids ?? [],
