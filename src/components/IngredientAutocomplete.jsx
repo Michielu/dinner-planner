@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react'
-import { STORES } from '../utils/stores'
 import { mergeSuggestions } from '../utils/ingredientSuggestions'
 
 /**
@@ -8,11 +7,12 @@ import { mergeSuggestions } from '../utils/ingredientSuggestions'
  * Props:
  *   allIngredients: Array<{id, name, store}>
  *   staples: Array<{id, name, store, notes}>
+ *   stores: Array<{value, label, sort_order}>
  *   value: {name: string, store: string, existingId: string|null, fromStaple: boolean}
  *   onChange: (value) => void
  *   onRemove: () => void
  */
-export function IngredientRow({ allIngredients, staples = [], value, onChange, onRemove }) {
+export function IngredientRow({ allIngredients, staples = [], stores, value, onChange, onRemove }) {
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const containerRef = useRef(null)
@@ -75,7 +75,7 @@ export function IngredientRow({ allIngredients, staples = [], value, onChange, o
                     <span className="text-xs text-garden-patch font-bold" title="In your staples list">staple</span>
                   )}
                   <span className="text-stone-grey text-xs">
-                    {STORES.find(st => st.value === s.store)?.label}
+                    {stores.find(st => st.value === s.store)?.label}
                   </span>
                 </span>
               </li>
@@ -88,7 +88,7 @@ export function IngredientRow({ allIngredients, staples = [], value, onChange, o
         onChange={e => onChange({ ...value, store: e.target.value })}
         className="border border-willow-mist rounded-xl bg-field-cream px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
       >
-        {STORES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+        {stores.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
       </select>
       <button
         type="button"
