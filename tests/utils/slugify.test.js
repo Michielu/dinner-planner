@@ -15,7 +15,7 @@ describe('slugify', () => {
   })
 
   it('collapses multiple spaces into a single underscore', () => {
-    expect(slugify('Trader  Joe')).toBe('trader__joe')
+    expect(slugify('Trader  Joe')).toBe('trader_joe')
   })
 
   it('returns the base slug when no collision', () => {
