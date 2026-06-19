@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react'
 import { useIngredients } from '../hooks/useIngredients'
-import { STORES } from '../utils/stores'
 
 /**
  * Props:
+ *   stores: Array<{value, label, sort_order}>
  *   onStart: (selectedIngredients: Array<{id, name, store}>) => void
+ *   initialSelected: Array<{id, name, store}>
  */
-export function PantryInput({ onStart, initialSelected = [] }) {
+export function PantryInput({ stores, onStart, initialSelected = [] }) {
   const { ingredients, findOrCreate } = useIngredients()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(initialSelected)
@@ -94,7 +95,7 @@ export function PantryInput({ onStart, initialSelected = [] }) {
           >
             <div>
               <span className="font-bold text-soil-shadow">{ing.name}</span>
-              <span className="text-xs text-stone-grey ml-2">{STORES.find(s => s.value === ing.store)?.label}</span>
+              <span className="text-xs text-stone-grey ml-2">{stores.find(s => s.value === ing.store)?.label}</span>
             </div>
             <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center text-xs shrink-0 transition-colors ${
               isSelected(ing.id) ? 'bg-fresh-herb border-fresh-herb text-soil-shadow' : 'border-stone-grey/40'
@@ -125,7 +126,7 @@ export function PantryInput({ onStart, initialSelected = [] }) {
               onChange={e => setNewStore(e.target.value)}
               className="border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none"
             >
-              {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {stores.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
             <button type="submit" disabled={saving} className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">
               {saving ? '…' : 'Add'}
