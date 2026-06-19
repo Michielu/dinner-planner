@@ -54,7 +54,7 @@ export function GroceryList({ slots, recipes, staples, addedIngredients = [], on
   return (
     <div className="flex flex-col">
       {/* Store grid */}
-      <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
+      <div className="px-4 py-4 sm:px-6 sm:py-5">
         {total === 0 ? (
           <p className="text-center text-stone-grey py-8">No meals planned yet — nothing to buy.</p>
         ) : (
@@ -65,7 +65,7 @@ export function GroceryList({ slots, recipes, staples, addedIngredients = [], on
                 <ul className="space-y-2">
                   {items.map((item, i) => (
                     <li key={item.isAdded || item.isStaple ? item.id : i} className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
+                      <span className="text-sm font-bold text-soil-shadow uppercase">{item.name}</span>
                       {item.isAdded && onRemoveAdded ? (
                         <button
                           onClick={() => onRemoveAdded(item.id)}
