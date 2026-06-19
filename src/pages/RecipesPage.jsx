@@ -51,6 +51,7 @@ export default function RecipesPage() {
         name: recipe.name,
         categoryId: recipe.category?.id ?? null,
         ingredientIds: recipe.ingredients.filter(i => i.id !== ingredientId).map(i => i.id),
+        sourceUrl: recipe.source_url ?? null,
       })
     } catch {
       showToast("Couldn't remove ingredient, try again")
