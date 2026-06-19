@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
+import { useStores } from '../hooks/useStores'
 import { RecipeForm } from '../components/RecipeForm'
 import { RecipeImport } from '../components/RecipeImport'
 import { useToast, Toast } from '../components/Toast'
-import { STORES } from '../utils/stores'
 
 export default function RecipesPage() {
   const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes()
   const { staples, loading: staplesLoading } = useStaples()
+  const { stores, loading: storesLoading } = useStores()
   const { toast, showToast, dismissToast } = useToast()
   const [mode, setMode] = useState(null) // null | 'add' | 'import' | {edit: recipe}
   const [filterCategory, setFilterCategory] = useState('all')
@@ -56,7 +57,7 @@ export default function RecipesPage() {
     }
   }
 
-  if (loading || staplesLoading) return <div className="p-6 text-stone-grey">Loading…</div>
+  if (loading || staplesLoading || storesLoading) return <div className="p-3 sm:p-6 text-stone-grey">Loading…</div>
 
   return (
     <div className="p-3 sm:p-6 max-w-3xl mx-auto">
@@ -87,6 +88,7 @@ export default function RecipesPage() {
         <RecipeImport
           categories={categories}
           staples={staples}
+          stores={stores}
           addRecipe={addRecipe}
           onDone={() => setMode(null)}
           onCancel={() => setMode(null)}
@@ -100,6 +102,7 @@ export default function RecipesPage() {
           <RecipeForm
             categories={categories}
             staples={staples}
+            stores={stores}
             initial={null}
             onSave={handleAdd}
             onCancel={() => setMode(null)}
@@ -139,6 +142,7 @@ export default function RecipesPage() {
               <RecipeForm
                 categories={categories}
                 staples={staples}
+                stores={stores}
                 initial={{ name: recipe.name, categoryId: recipe.category?.id, ingredients: recipe.ingredients }}
                 onSave={handleUpdate}
                 onCancel={() => setMode(null)}
@@ -177,7 +181,7 @@ export default function RecipesPage() {
                         className="inline-flex items-center gap-1 text-xs bg-field-cream text-stone-grey px-2.5 py-0.5 rounded-pill font-bold"
                       >
                         {ing.name}
-                        <span className="text-stone-grey/60">· {STORES.find(s => s.value === ing.store)?.label}</span>
+                        <span className="text-stone-grey/60">· {stores.find(s => s.value === ing.store)?.label}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveIngredient(recipe, ing.id)}
