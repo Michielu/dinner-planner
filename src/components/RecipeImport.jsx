@@ -7,7 +7,7 @@ import { parseIngredientName, findMatches, preprocessPaste } from '../utils/ingr
  *   categories: Array<{id, name}>
  *   staples: Array<{id, name, store}>
  *   stores: Array<{value, label}>
- *   addRecipe: ({name, categoryId, ingredientIds}) => Promise<void>
+ *   addRecipe: ({name, categoryId, ingredientIds, sourceUrl}) => Promise<void>
  *   onDone: () => void
  *   onCancel: () => void
  */
@@ -120,6 +120,7 @@ export function RecipeImport({ categories, staples, stores, addRecipe, onDone, o
         name: recipeName.trim(),
         categoryId: categoryId || null,
         ingredientIds: [...new Set(ingredientIds)],
+        sourceUrl: url.trim() || null,
       })
       onDone()
     } catch {
