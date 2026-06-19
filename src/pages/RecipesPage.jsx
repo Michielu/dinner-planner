@@ -143,7 +143,7 @@ export default function RecipesPage() {
                 categories={categories}
                 staples={staples}
                 stores={stores}
-                initial={{ name: recipe.name, categoryId: recipe.category?.id, ingredients: recipe.ingredients }}
+                initial={{ name: recipe.name, categoryId: recipe.category?.id, sourceUrl: recipe.source_url ?? '', ingredients: recipe.ingredients }}
                 onSave={handleUpdate}
                 onCancel={() => setMode(null)}
               />
@@ -156,6 +156,17 @@ export default function RecipesPage() {
                       <span className="ml-2 text-xs bg-garden-patch/10 text-garden-patch font-bold px-2 py-0.5 rounded-pill">
                         {recipe.category.name}
                       </span>
+                    )}
+                    {recipe.source_url && (
+                      <a
+                        href={recipe.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-xs text-stone-grey hover:text-garden-patch transition-colors"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        Source ↗
+                      </a>
                     )}
                   </div>
                   <div className="flex gap-3 ml-4 shrink-0">
