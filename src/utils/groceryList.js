@@ -1,5 +1,3 @@
-import { STORES } from './stores.js'
-
 /**
  * Generates a grocery list grouped by store.
  *
@@ -7,12 +5,13 @@ import { STORES } from './stores.js'
  * @param {Array<{id: string, name: string, ingredients: Array<{id: string, name: string, store: string}>}>} recipes
  * @param {Array<{id: string, name: string, store: string, notes: string|null}>} staples
  * @param {Array<{id: string, name: string, store: string}>} addedIngredients
+ * @param {Array<{value: string, label: string, sort_order: number}>} stores
  * @returns {Record<string, Array>} — one key per store; each holds an array of items
  *   Recipe item:  {name, isStaple: false, isAdded: false, meals: string[]}
- *   Staple item:  {name, isStaple: true,  isAdded: false, notes: string|null}
+ *   Staple item:  {id, name, isStaple: true,  isAdded: false, notes: string|null}
  *   Added item:   {name, isStaple: false, isAdded: true,  id: string}
  */
-export function generateGroceryList(slots, recipes, staples, addedIngredients = []) {
+export function generateGroceryList(slots, recipes, staples, addedIngredients = [], stores = []) {
   const recipeMap = new Map(recipes.map(r => [r.id, r]))
 
   // ingredient id → {name, store, meals: string[]}
@@ -33,7 +32,7 @@ export function generateGroceryList(slots, recipes, staples, addedIngredients = 
     }
   }
 
-  const result = Object.fromEntries(STORES.map(s => [s.value, []]))
+  const result = Object.fromEntries(stores.map(s => [s.value, []]))
 
   for (const item of ingredientMap.values()) {
     if (!result[item.store]) result[item.store] = []
