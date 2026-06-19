@@ -105,25 +105,27 @@ export function StapleChecker({ stores, onNext, initialSelected = [], onToggle }
             + Add new staple
           </button>
         ) : (
-          <form onSubmit={handleAddNew} className="px-4 py-3 flex gap-2 bg-fresh-herb/10">
+          <form onSubmit={handleAddNew} className="px-4 py-3 flex flex-col gap-2 bg-fresh-herb/10">
             <input
               autoFocus
               value={newName}
               onChange={e => setNewName(e.target.value)}
               placeholder="Staple name"
-              className="flex-1 border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+              className="w-full border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none focus:ring-2 focus:ring-fresh-herb"
             />
-            <select
-              value={newStore}
-              onChange={e => setNewStore(e.target.value)}
-              className="border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none"
-            >
-              {stores.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-            <button type="submit" disabled={saving} className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">
-              {saving ? '…' : 'Add'}
-            </button>
-            <button type="button" onClick={() => setAdding(false)} className="text-stone-grey px-2 text-sm">Cancel</button>
+            <div className="flex gap-2">
+              <select
+                value={newStore}
+                onChange={e => setNewStore(e.target.value)}
+                className="flex-1 border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none"
+              >
+                {stores.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              <button type="submit" disabled={saving} className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">
+                {saving ? '…' : 'Add'}
+              </button>
+              <button type="button" onClick={() => setAdding(false)} className="text-stone-grey px-2 text-sm">Cancel</button>
+            </div>
           </form>
         )}
       </div>
