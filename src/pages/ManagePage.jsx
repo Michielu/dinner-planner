@@ -3,21 +3,25 @@ import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
 import { useIngredients } from '../hooks/useIngredients'
 import { useToast, Toast } from '../components/Toast'
-import { STORES } from '../utils/stores'
+import { useStores } from '../hooks/useStores'
 
 const TABS = [
   { key: 'staples',     label: 'Staples' },
   { key: 'ingredients', label: 'Ingredients' },
   { key: 'categories',  label: 'Categories' },
+  { key: 'stores',      label: 'Stores' },
 ]
 
 export default function ManagePage() {
   const { categories, addCategory, deleteCategory } = useRecipes()
   const { staples, addStaple, updateStaple, deleteStaple } = useStaples()
   const { ingredients, deleteIngredient, updateIngredient, findOrCreate } = useIngredients()
+  const { stores, addStore, deleteStore } = useStores()
   const { toast, showToast, dismissToast } = useToast()
 
   const [activeTab, setActiveTab] = useState('staples')
+  const [newStore, setNewStore] = useState('')
+  const [inUseStore, setInUseStore] = useState(null)
 
   const [newCategory, setNewCategory] = useState('')
   const [newStaple, setNewStaple] = useState({ name: '', store: 'aldi', notes: '' })
@@ -137,6 +141,30 @@ export default function ManagePage() {
     }
   }
 
+  async function handleAddStore(e) {
+    e.preventDefault()
+    if (!newStore.trim()) return
+    try {
+      await addStore({ label: newStore.trim() })
+      setNewStore('')
+    } catch {
+      showToast("Couldn't save store, try again")
+    }
+  }
+
+  async function handleDeleteStore(value) {
+    setInUseStore(null)
+    try {
+      await deleteStore(value)
+    } catch (err) {
+      if (err?.inUse) {
+        setInUseStore(value)
+      } else {
+        showToast("Couldn't delete store, try again")
+      }
+    }
+  }
+
   return (
     <div className="p-3 sm:p-6 max-w-2xl mx-auto">
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
@@ -184,7 +212,7 @@ export default function ManagePage() {
                           onChange={e => setEditingStaple(p => ({ ...p, store: e.target.value }))}
                           className="border border-willow-mist rounded-xl bg-willow-mist px-3 py-1.5 text-sm focus:outline-none"
                         >
-                          {STORES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                          {stores.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
                         </select>
                         <input
                           value={editingStaple.notes || ''}
@@ -199,7 +227,7 @@ export default function ManagePage() {
                       <div className="flex flex-wrap items-center justify-between gap-y-2">
                         <div>
                           <span className="font-bold text-soil-shadow">{s.name}</span>
-                          <span className="text-xs text-stone-grey ml-2">{STORES.find(st => st.value === s.store)?.label}</span>
+                          <span className="text-xs text-stone-grey ml-2">{stores.find(st => st.value === s.store)?.label}</span>
                           {s.notes && <span className="text-xs text-stone-grey ml-2">— {s.notes}</span>}
                         </div>
                         <div className="flex gap-3">
@@ -227,7 +255,7 @@ export default function ManagePage() {
                   onChange={e => setNewStaple(p => ({ ...p, store: e.target.value }))}
                   className="border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
                 >
-                  {STORES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                  {stores.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
                 </select>
                 <input
                   value={newStaple.notes}
@@ -268,7 +296,7 @@ export default function ManagePage() {
                           onChange={e => setEditingIngredient(p => ({ ...p, store: e.target.value }))}
                           className="border border-willow-mist rounded-xl bg-willow-mist px-3 py-1.5 text-sm focus:outline-none"
                         >
-                          {STORES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                          {stores.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
                         </select>
                         <button type="submit" className="bg-fresh-herb text-soil-shadow font-bold px-4 py-1.5 rounded-pill text-sm hover:opacity-90">Save</button>
                         <button type="button" onClick={() => setEditingIngredient(null)} className="text-stone-grey px-2 text-sm">Cancel</button>
@@ -277,7 +305,7 @@ export default function ManagePage() {
                       <div className="flex flex-wrap items-center justify-between gap-y-2">
                         <div>
                           <span className="font-bold text-soil-shadow">{ing.name}</span>
-                          <span className="text-xs text-stone-grey ml-2">{STORES.find(st => st.value === ing.store)?.label}</span>
+                          <span className="text-xs text-stone-grey ml-2">{stores.find(st => st.value === ing.store)?.label}</span>
                         </div>
                         <div className="flex gap-3">
                           <button onClick={() => setEditingIngredient(ing)} className="text-garden-patch text-sm font-bold hover:underline">Edit</button>
@@ -307,7 +335,7 @@ export default function ManagePage() {
                   onChange={e => setNewIngredient(p => ({ ...p, store: e.target.value }))}
                   className="border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
                 >
-                  {STORES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                  {stores.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
                 </select>
                 <button type="submit" className="bg-fresh-herb text-soil-shadow font-bold px-5 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm">
                   Add
@@ -342,6 +370,49 @@ export default function ManagePage() {
                   className="flex-1 border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
                 />
                 <button type="submit" className="bg-fresh-herb text-soil-shadow font-bold px-5 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm">
+                  Add
+                </button>
+              </form>
+            </>
+          )}
+
+          {activeTab === 'stores' && (
+            <>
+              <p className="text-sm text-stone-grey">Where you shop. Assign each ingredient and staple to a store.</p>
+              <ul className="space-y-2">
+                {stores.map(s => (
+                  <li key={s.id} className="bg-field-cream rounded-2xl px-5 py-3 shadow-card">
+                    <div className="flex flex-wrap items-center justify-between gap-y-2">
+                      <span className="font-bold text-soil-shadow">{s.label}</span>
+                      <div className="flex items-center gap-3">
+                        {inUseStore === s.value && (
+                          <span className="text-xs text-stone-grey">In use — reassign items first</span>
+                        )}
+                        <button
+                          onClick={() => handleDeleteStore(s.value)}
+                          className="text-stone-grey hover:text-red-500 text-sm font-bold transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+                {stores.length === 0 && (
+                  <li className="text-stone-grey text-sm px-2">No stores yet.</li>
+                )}
+              </ul>
+              <form onSubmit={handleAddStore} className="flex gap-2 pt-2">
+                <input
+                  value={newStore}
+                  onChange={e => setNewStore(e.target.value)}
+                  placeholder="Store name (e.g. Whole Foods)"
+                  className="flex-1 border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+                />
+                <button
+                  type="submit"
+                  className="bg-fresh-herb text-soil-shadow font-bold px-5 py-2.5 rounded-pill shadow-card hover:opacity-90 transition-opacity text-sm"
+                >
                   Add
                 </button>
               </form>
