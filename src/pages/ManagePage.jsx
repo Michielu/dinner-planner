@@ -138,7 +138,7 @@ export default function ManagePage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-2xl mx-auto">
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
 
       <div className="bg-willow-mist rounded-card shadow-card overflow-hidden">
@@ -164,7 +164,7 @@ export default function ManagePage() {
         </div>
 
         {/* Tab content */}
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
 
           {activeTab === 'staples' && (
             <>
@@ -196,7 +196,7 @@ export default function ManagePage() {
                         <button type="button" onClick={() => setEditingStaple(null)} className="text-stone-grey px-2 text-sm">Cancel</button>
                       </form>
                     ) : (
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-y-2">
                         <div>
                           <span className="font-bold text-soil-shadow">{s.name}</span>
                           <span className="text-xs text-stone-grey ml-2">{STORES.find(st => st.value === s.store)?.label}</span>
@@ -274,7 +274,7 @@ export default function ManagePage() {
                         <button type="button" onClick={() => setEditingIngredient(null)} className="text-stone-grey px-2 text-sm">Cancel</button>
                       </form>
                     ) : (
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-y-2">
                         <div>
                           <span className="font-bold text-soil-shadow">{ing.name}</span>
                           <span className="text-xs text-stone-grey ml-2">{STORES.find(st => st.value === ing.store)?.label}</span>
