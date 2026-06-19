@@ -32,7 +32,7 @@ export function WeekGrid({ slots, onSlotClick }) {
                   {SLOT_SPECIAL[special.type].label}
                 </span>
               ) : recipes.length > 0 ? (
-                <span className="text-sm text-soil-shadow font-bold">
+                <span className="text-sm text-soil-shadow font-bold uppercase">
                   {recipes.map(s => s.recipe?.name).join(' + ')}
                 </span>
               ) : (

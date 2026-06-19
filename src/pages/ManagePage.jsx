@@ -226,8 +226,8 @@ export default function ManagePage() {
                     ) : (
                       <div className="flex flex-wrap items-center justify-between gap-y-2">
                         <div>
-                          <span className="font-bold text-soil-shadow">{s.name}</span>
-                          <span className="text-xs text-stone-grey ml-2">{stores.find(st => st.value === s.store)?.label}</span>
+                          <span className="font-bold text-soil-shadow uppercase">{s.name}</span>
+                          <span className="text-xs text-stone-grey ml-2 uppercase">{stores.find(st => st.value === s.store)?.label}</span>
                           {s.notes && <span className="text-xs text-stone-grey ml-2">— {s.notes}</span>}
                         </div>
                         <div className="flex gap-3">
@@ -304,8 +304,8 @@ export default function ManagePage() {
                     ) : (
                       <div className="flex flex-wrap items-center justify-between gap-y-2">
                         <div>
-                          <span className="font-bold text-soil-shadow">{ing.name}</span>
-                          <span className="text-xs text-stone-grey ml-2">{stores.find(st => st.value === ing.store)?.label}</span>
+                          <span className="font-bold text-soil-shadow uppercase">{ing.name}</span>
+                          <span className="text-xs text-stone-grey ml-2 uppercase">{stores.find(st => st.value === ing.store)?.label}</span>
                         </div>
                         <div className="flex gap-3">
                           <button onClick={() => setEditingIngredient(ing)} className="text-garden-patch text-sm font-bold hover:underline">Edit</button>
@@ -349,7 +349,7 @@ export default function ManagePage() {
               <ul className="space-y-2">
                 {categories.map(cat => (
                   <li key={cat.id} className="flex items-center justify-between bg-field-cream rounded-2xl px-5 py-3 shadow-card">
-                    <span className="font-bold text-soil-shadow">{cat.name}</span>
+                    <span className="font-bold text-soil-shadow uppercase">{cat.name}</span>
                     <button
                       onClick={() => handleDeleteCategory(cat.id)}
                       className="text-stone-grey hover:text-red-500 text-sm font-bold transition-colors"
@@ -383,7 +383,7 @@ export default function ManagePage() {
                 {stores.map(s => (
                   <li key={s.id} className="bg-field-cream rounded-2xl px-5 py-3 shadow-card">
                     <div className="flex flex-wrap items-center justify-between gap-y-2">
-                      <span className="font-bold text-soil-shadow">{s.label}</span>
+                      <span className="font-bold text-soil-shadow uppercase">{s.label}</span>
                       <div className="flex items-center gap-3">
                         {inUseStore === s.value && (
                           <span className="text-xs text-stone-grey">In use — reassign items first</span>

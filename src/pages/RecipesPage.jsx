@@ -117,7 +117,7 @@ export default function RecipesPage() {
           <button
             key={c.id}
             onClick={() => setFilterCategory(c.id)}
-            className={`px-3 py-1.5 rounded-pill text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-pill text-xs font-bold transition-colors uppercase ${
               filterCategory === c.id
                 ? 'bg-garden-patch text-fresh-herb'
                 : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
@@ -152,9 +152,9 @@ export default function RecipesPage() {
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="font-bold text-soil-shadow">{recipe.name}</span>
+                    <span className="font-bold text-soil-shadow uppercase">{recipe.name}</span>
                     {recipe.category && (
-                      <span className="ml-2 text-xs bg-garden-patch/10 text-garden-patch font-bold px-2 py-0.5 rounded-pill">
+                      <span className="ml-2 text-xs bg-garden-patch/10 text-garden-patch font-bold px-2 py-0.5 rounded-pill uppercase">
                         {recipe.category.name}
                       </span>
                     )}
@@ -190,7 +190,7 @@ export default function RecipesPage() {
                     {recipe.ingredients.map(ing => (
                       <span
                         key={ing.id}
-                        className="inline-flex items-center gap-1 text-xs bg-field-cream text-stone-grey px-2.5 py-0.5 rounded-pill font-bold"
+                        className="inline-flex items-center gap-1 text-xs bg-field-cream text-stone-grey px-2.5 py-0.5 rounded-pill font-bold uppercase"
                       >
                         {ing.name}
                         <span className="text-stone-grey/60">· {stores.find(s => s.value === ing.store)?.label}</span>

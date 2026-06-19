@@ -85,7 +85,7 @@ export function StapleChecker({ stores, onNext, initialSelected = [], onToggle }
             }`}
           >
             <div>
-              <span className="font-bold text-soil-shadow">{staple.name}</span>
+              <span className="font-bold text-soil-shadow uppercase">{staple.name}</span>
               <span className="text-xs text-stone-grey ml-2">{stores.find(s => s.value === staple.store)?.label}</span>
               {staple.notes && <span className="text-xs text-stone-grey ml-1">— {staple.notes}</span>}
             </div>

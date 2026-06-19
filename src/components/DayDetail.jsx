@@ -101,7 +101,7 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                   onClick={() => onRemove(i)}
                   className="flex items-center gap-1.5 bg-fresh-herb/30 hover:bg-red-100 text-soil-shadow hover:text-red-600 rounded-full px-3 py-2 text-sm font-bold transition-colors group"
                 >
-                  {s.type === 'recipe' ? s.recipe?.name : SLOT_LABEL[s.type]}
+                  {s.type === 'recipe' ? <span className="uppercase">{s.recipe?.name}</span> : SLOT_LABEL[s.type]}
                   <span className="text-xs opacity-50 group-hover:opacity-100">✕</span>
                 </button>
               ))}
@@ -172,8 +172,8 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                       onClick={() => handlePick({ type: 'recipe', recipe: { id: r.id, name: r.name } })}
                       className="w-full text-left px-4 py-3 rounded-2xl bg-fresh-herb/30 border border-fresh-herb/50 hover:bg-fresh-herb/50 transition-colors shadow-card"
                     >
-                      <span className="text-sm font-bold text-soil-shadow">{r.name}</span>
-                      <span className="text-xs text-garden-patch ml-2">
+                      <span className="text-sm font-bold text-soil-shadow uppercase">{r.name}</span>
+                      <span className="text-xs text-garden-patch ml-2 uppercase">
                         {r.ingredients
                           .filter(i => normalised.some(p => i.name.toLowerCase().includes(p)))
                           .map(i => i.name)
@@ -190,7 +190,7 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                   onClick={() => handlePick({ type: 'recipe', recipe: { id: r.id, name: r.name } })}
                   className="w-full text-left px-4 py-3 rounded-2xl bg-willow-mist hover:bg-fresh-herb/20 transition-colors"
                 >
-                  <span className="text-sm font-bold text-soil-shadow">{r.name}</span>
+                  <span className="text-sm font-bold text-soil-shadow uppercase">{r.name}</span>
                 </button>
               ))}
               {byCategory.length === 0 && (

@@ -122,7 +122,7 @@ export default function PlannerPage() {
             <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">This Week</h1>
             {pantryItems.length > 0 && (
               <p className="text-sm text-garden-patch mt-0.5 font-bold">
-                Using up: {pantryItems.map(i => i.name).join(', ')}
+                Using up: <span className="uppercase">{pantryItems.map(i => i.name).join(', ')}</span>
               </p>
             )}
           </div>
