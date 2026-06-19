@@ -1,5 +1,6 @@
 import { Routes, Route, NavLink } from 'react-router-dom'
 import { ConnectionBanner } from './components/ConnectionBanner'
+import { BottomNav } from './components/BottomNav'
 import PlannerPage from './pages/PlannerPage'
 import RecipesPage from './pages/RecipesPage'
 import ManagePage from './pages/ManagePage'
@@ -30,12 +31,14 @@ export default function App() {
         <span className="font-display font-light text-2xl tracking-tight text-garden-patch mr-4">
           Dinner Planner
         </span>
-        <NavItem to="/" label="This Week" />
-        <NavItem to="/recipes" label="Recipes" />
-        <NavItem to="/grocery" label="Grocery List" />
-        <NavItem to="/manage" label="Catalog" />
+        <div className="hidden md:flex items-center gap-3">
+          <NavItem to="/" label="This Week" />
+          <NavItem to="/recipes" label="Recipes" />
+          <NavItem to="/grocery" label="Grocery List" />
+          <NavItem to="/manage" label="Catalog" />
+        </div>
       </nav>
-      <main className="max-w-4xl mx-auto">
+      <main className="max-w-4xl mx-auto pb-16 md:pb-0">
         <Routes>
           <Route path="/" element={<PlannerPage />} />
           <Route path="/recipes" element={<RecipesPage />} />
@@ -43,6 +46,7 @@ export default function App() {
           <Route path="/manage" element={<ManagePage />} />
         </Routes>
       </main>
+      <BottomNav />
     </div>
   )
 }
