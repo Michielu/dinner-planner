@@ -19,7 +19,7 @@ const SLOT_LABEL = {
  *   onClose: () => void
  */
 export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd, onRemove, onClose }) {
-  const [picking, setPicking] = useState(false)
+  const [picking, setPicking] = useState(slots.length === 0)
   const [filterCategory, setFilterCategory] = useState('all')
   const [search, setSearch] = useState('')
 

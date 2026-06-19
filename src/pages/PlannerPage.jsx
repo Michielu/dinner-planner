@@ -9,7 +9,6 @@ import { PlannerShell } from '../components/PlannerShell'
 import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
 import { WeekGrid } from '../components/WeekGrid'
-import { RecipePicker } from '../components/RecipePicker'
 import { DayDetail } from '../components/DayDetail'
 
 export default function PlannerPage() {
@@ -19,9 +18,6 @@ export default function PlannerPage() {
   const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
   const { stores, loading: storesLoading } = useStores()
 
-  // pickerDay: empty day → open RecipePicker directly
-  // detailDay: filled day → open DayDetail bottom sheet
-  const [pickerDay, setPickerDay] = useState(null)
   const [detailDay, setDetailDay] = useState(null)
 
   const { slots, selectedStapleIds, pantryItems, phase, visitedPhases } = plan
@@ -37,7 +33,6 @@ export default function PlannerPage() {
       ? visitedPhases
       : [...visitedPhases, nextPhase]
     updatePlan({ phase: nextPhase, visitedPhases: updatedVisited })
-    setPickerDay(null)
     setDetailDay(null)
   }
 
@@ -64,19 +59,7 @@ export default function PlannerPage() {
   }
 
   function handleSlotClick(day) {
-    const daySlots = slots[day]
-    if (!daySlots || daySlots.length === 0) {
-      setPickerDay(day)
-    } else {
-      setDetailDay(day)
-    }
-  }
-
-  // Empty day: RecipePicker sets the slot array to a single-item array
-  function handlePickerSelect(slot) {
-    const day = pickerDay
-    updatePlan({ slots: { ...slots, [day]: [slot] } })
-    setPickerDay(null)
+    setDetailDay(day)
   }
 
   // DayDetail: append a new slot to the day's array
@@ -103,17 +86,6 @@ export default function PlannerPage() {
       visitedPhases={new Set(visitedPhases)}
       onNavigate={navigatePlanner}
     >
-      {pickerDay && (
-        <RecipePicker
-          recipes={recipes}
-          categories={categories}
-          pantryItems={pantryItems.map(i => i.name)}
-          onSelect={handlePickerSelect}
-          onClose={() => setPickerDay(null)}
-          day={pickerDay}
-        />
-      )}
-
       {detailDay && (
         <DayDetail
           day={detailDay}
