@@ -103,7 +103,7 @@ export default function PlannerPage() {
       )}
 
       {phase === 'plan' && (
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="mb-6">
             <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">This Week</h1>
             {pantryItems.length > 0 && (

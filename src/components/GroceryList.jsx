@@ -65,7 +65,7 @@ export function GroceryList({ slots, recipes, staples, addedIngredients = [], on
                 <ul className="space-y-2">
                   {items.map((item, i) => (
                     <li key={item.isAdded || item.isStaple ? item.id : i} className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-bold text-soil-shadow uppercase">{item.name}</span>
+                      <span className="text-sm font-bold text-soil-shadow">{item.name}</span>
                       {item.isAdded && onRemoveAdded ? (
                         <button
                           onClick={() => onRemoveAdded(item.id)}
