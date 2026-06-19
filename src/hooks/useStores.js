@@ -1,20 +1,24 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { slugify } from '../utils/slugify'
+import { useAuth } from './useAuth'
 
 export function useStores() {
+  const { email } = useAuth()
   const [stores, setStores] = useState([])
   const [loading, setLoading] = useState(true)
 
   const fetchStores = useCallback(async () => {
+    if (!email) { setLoading(false); return }
     setLoading(true)
     const { data, error } = await supabase
       .from('stores')
       .select('id, value, label, sort_order')
+      .eq('user_email', email)
       .order('sort_order')
     if (!error) setStores(data)
     setLoading(false)
-  }, [])
+  }, [email])
 
   useEffect(() => { fetchStores() }, [fetchStores])
 
@@ -25,7 +29,7 @@ export function useStores() {
       : 0
     const { error } = await supabase
       .from('stores')
-      .insert({ value, label: label.trim(), sort_order })
+      .insert({ value, label: label.trim(), sort_order, user_email: email })
     if (error) throw error
     await fetchStores()
   }
@@ -35,11 +39,13 @@ export function useStores() {
       .from('ingredients')
       .select('*', { count: 'exact', head: true })
       .eq('store', value)
+      .eq('user_email', email)
 
     const { count: stapleCount } = await supabase
       .from('staple_items')
       .select('*', { count: 'exact', head: true })
       .eq('store', value)
+      .eq('user_email', email)
 
     if ((ingCount ?? 0) > 0 || (stapleCount ?? 0) > 0) {
       throw { inUse: true }
@@ -49,6 +55,7 @@ export function useStores() {
       .from('stores')
       .delete()
       .eq('value', value)
+      .eq('user_email', email)
     if (error) throw error
     await fetchStores()
   }
