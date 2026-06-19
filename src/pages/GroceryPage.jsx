@@ -99,11 +99,11 @@ export default function GroceryPage() {
   )
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-3 sm:p-6">
       <div className="bg-willow-mist rounded-card shadow-card overflow-hidden">
 
         {/* Header */}
-        <div className="px-6 py-5 border-b border-willow-mist flex items-center justify-between gap-4">
+        <div className="px-4 py-4 sm:px-6 sm:py-5 border-b border-willow-mist flex items-center justify-between gap-4">
           <h1 className="font-display font-light text-3xl tracking-tight text-soil-shadow">Grocery List</h1>
           <button
             type="button"
@@ -115,7 +115,7 @@ export default function GroceryPage() {
         </div>
 
         {/* Search */}
-        <div className="px-6 py-4 border-b border-willow-mist">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-willow-mist">
           <div className="relative">
             <input
               value={query}
