@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useStaples } from '../hooks/useStaples'
-import { STORES } from '../utils/stores'
 
 /**
  * Props:
+ *   stores: Array<{value, label, sort_order}>
  *   onNext: (selectedStaples: Array<{id, name, store, notes}>) => void
+ *   initialSelected: Array<{id, name, store, notes}>
+ *   onToggle: (selected: Array) => void
  */
-export function StapleChecker({ onNext, initialSelected = [], onToggle }) {
+export function StapleChecker({ stores, onNext, initialSelected = [], onToggle }) {
   const { staples, addStaple } = useStaples()
   const [selected, setSelected] = useState(initialSelected)
   const [adding, setAdding] = useState(false)
@@ -84,7 +86,7 @@ export function StapleChecker({ onNext, initialSelected = [], onToggle }) {
           >
             <div>
               <span className="font-bold text-soil-shadow">{staple.name}</span>
-              <span className="text-xs text-stone-grey ml-2">{STORES.find(s => s.value === staple.store)?.label}</span>
+              <span className="text-xs text-stone-grey ml-2">{stores.find(s => s.value === staple.store)?.label}</span>
               {staple.notes && <span className="text-xs text-stone-grey ml-1">— {staple.notes}</span>}
             </div>
             <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center text-xs shrink-0 transition-colors ${
@@ -116,7 +118,7 @@ export function StapleChecker({ onNext, initialSelected = [], onToggle }) {
               onChange={e => setNewStore(e.target.value)}
               className="border border-willow-mist rounded-lg px-2 py-1.5 text-sm bg-field-cream focus:outline-none"
             >
-              {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {stores.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
             <button type="submit" disabled={saving} className="bg-fresh-herb text-soil-shadow font-bold px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">
               {saving ? '…' : 'Add'}
