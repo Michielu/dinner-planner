@@ -3,6 +3,7 @@ import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
 import { useIngredients } from '../hooks/useIngredients'
 import { useWeekPlan } from '../hooks/useWeekPlan'
+import { useStores } from '../hooks/useStores'
 import { resolveSelectedStaples } from '../utils/weekPlan'
 import { GroceryList } from '../components/GroceryList'
 import { STORES } from '../utils/stores'
@@ -12,6 +13,7 @@ export default function GroceryPage() {
   const { staples, loading: staplesLoading } = useStaples()
   const { ingredients, loading: ingredientsLoading, findOrCreate } = useIngredients()
   const { plan, planCreatedAt, loading: planLoading, updatePlan, resetPlan } = useWeekPlan()
+  const { stores, loading: storesLoading } = useStores()
 
   const [query, setQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
@@ -92,7 +94,7 @@ export default function GroceryPage() {
     updatePlan({ selectedStapleIds: resolvedStapleIds.filter(x => x !== id) })
   }
 
-  const loading = recipesLoading || staplesLoading || ingredientsLoading || planLoading
+  const loading = recipesLoading || staplesLoading || ingredientsLoading || planLoading || storesLoading
 
   if (loading) return (
     <div className="p-6 text-stone-grey font-body">Loading…</div>
@@ -200,6 +202,7 @@ export default function GroceryPage() {
           recipes={recipes}
           staples={selectedStaples}
           addedIngredients={addedIngredients}
+          stores={stores}
           onRemoveAdded={handleRemoveAdded}
           onRemoveStaple={handleRemoveStaple}
         />
