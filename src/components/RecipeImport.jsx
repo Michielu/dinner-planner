@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { useIngredients } from '../hooks/useIngredients'
 import { parseIngredientName, findMatches, preprocessPaste } from '../utils/ingredientParser'
-import { STORES } from '../utils/stores'
 
 /**
  * Props:
  *   categories: Array<{id, name}>
  *   staples: Array<{id, name, store}>
+ *   stores: Array<{value, label}>
  *   addRecipe: ({name, categoryId, ingredientIds}) => Promise<void>
  *   onDone: () => void
  *   onCancel: () => void
  */
-export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel }) {
+export function RecipeImport({ categories, staples, stores, addRecipe, onDone, onCancel }) {
   const { ingredients, loading: ingredientsLoading, findOrCreate } = useIngredients()
 
   const [phase, setPhase] = useState('url') // 'url' | 'loading' | 'review'
@@ -235,7 +235,7 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
             <ul className="space-y-1.5">
               {matchedRows.map(row => {
                 const matchedItem = row.matches.find(m => m.id === row.matchId)
-                const storeName = STORES.find(s => s.value === row.store)?.label ?? row.store
+                const storeName = stores.find(s => s.value === row.store)?.label ?? row.store
                 return (
                   <li key={row.i} className="bg-field-cream rounded-2xl px-4 py-2.5 flex items-center gap-3 flex-wrap text-sm">
                     <span className="text-stone-grey flex-1 min-w-24 truncate">{row.name}</span>
@@ -249,7 +249,7 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
                       >
                         {row.matches.map(m => (
                           <option key={m.id} value={m.id}>
-                            {m._isStaple ? '★ ' : ''}{m.name} · {STORES.find(s => s.value === m.store)?.label}
+                            {m._isStaple ? '★ ' : ''}{m.name} · {stores.find(s => s.value === m.store)?.label}
                           </option>
                         ))}
                         <option value="__new__">Add as new ingredient…</option>
@@ -303,7 +303,7 @@ export function RecipeImport({ categories, staples, addRecipe, onDone, onCancel 
                     onChange={e => updateRow(row.i, { store: e.target.value })}
                     className="border border-willow-mist rounded-xl bg-willow-mist px-3 py-1.5 text-sm focus:outline-none"
                   >
-                    {STORES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    {stores.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                   {/* If there are potential matches the auto-matcher missed, surface them */}
                   {row.matches.length > 0 && (
