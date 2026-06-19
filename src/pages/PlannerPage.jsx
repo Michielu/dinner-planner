@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
 import { useWeekPlan } from '../hooks/useWeekPlan'
+import { useStores } from '../hooks/useStores'
 import { resolveSelectedStaples } from '../utils/weekPlan'
 import { PlannerShell } from '../components/PlannerShell'
 import { StapleChecker } from '../components/StapleChecker'
@@ -15,6 +16,7 @@ export default function PlannerPage() {
   const { recipes, categories, loading: recipesLoading } = useRecipes()
   const { staples, loading: staplesLoading } = useStaples()
   const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
+  const { stores, loading: storesLoading } = useStores()
 
   const [activeDay, setActiveDay] = useState(null)
 
@@ -65,7 +67,7 @@ export default function PlannerPage() {
     setActiveDay(null)
   }
 
-  if (recipesLoading || staplesLoading || planLoading) return (
+  if (recipesLoading || staplesLoading || planLoading || storesLoading) return (
     <div className="p-6 text-stone-grey font-body">Loading…</div>
   )
 
@@ -89,6 +91,7 @@ export default function PlannerPage() {
       {phase === 'staples' && (
         <div className="max-w-md mx-auto p-4 sm:p-8">
           <StapleChecker
+            stores={stores}
             onNext={handleStaplesNext}
             initialSelected={selectedStaples}
             onToggle={handleStaplesToggle}
@@ -98,7 +101,7 @@ export default function PlannerPage() {
 
       {phase === 'pantry' && (
         <div className="max-w-md mx-auto p-4 sm:p-8">
-          <PantryInput onStart={handlePantryStart} initialSelected={pantryItems} />
+          <PantryInput stores={stores} onStart={handlePantryStart} initialSelected={pantryItems} />
         </div>
       )}
 
