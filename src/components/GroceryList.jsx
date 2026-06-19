@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { generateGroceryList } from '../utils/groceryList'
-import { STORES } from '../utils/stores'
 
 /**
  * Props:
@@ -11,17 +10,17 @@ import { STORES } from '../utils/stores'
  *   onRemoveAdded: (id: string) => void
  *   onRemoveStaple: (id: string) => void
  */
-export function GroceryList({ slots, recipes, staples, addedIngredients = [], onRemoveAdded, onRemoveStaple }) {
+export function GroceryList({ slots, recipes, staples, stores, addedIngredients = [], onRemoveAdded, onRemoveStaple }) {
   const [copyStatus, setCopyStatus] = useState(null)
 
   const slotArray = Object.entries(slots)
     .filter(([, slot]) => slot !== null)
     .map(([day, slot]) => ({ day, ...slot, recipeId: slot?.recipe?.id }))
 
-  const list = generateGroceryList(slotArray, recipes, staples, addedIngredients)
+  const list = generateGroceryList(slotArray, recipes, staples, addedIngredients, stores)
   const total = Object.values(list).reduce((sum, items) => sum + items.length, 0)
 
-  const storeColumns = STORES
+  const storeColumns = stores
     .map(s => ({ store: s, items: list[s.value] ?? [] }))
     .filter(col => col.items.length > 0)
 
