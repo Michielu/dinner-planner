@@ -87,7 +87,7 @@ export default function PlannerPage() {
       )}
 
       {phase === 'staples' && (
-        <div className="max-w-md mx-auto p-8">
+        <div className="max-w-md mx-auto p-4 sm:p-8">
           <StapleChecker
             onNext={handleStaplesNext}
             initialSelected={selectedStaples}
@@ -97,7 +97,7 @@ export default function PlannerPage() {
       )}
 
       {phase === 'pantry' && (
-        <div className="max-w-md mx-auto p-8">
+        <div className="max-w-md mx-auto p-4 sm:p-8">
           <PantryInput onStart={handlePantryStart} initialSelected={pantryItems} />
         </div>
       )}

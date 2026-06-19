@@ -28,7 +28,7 @@ function tabLabel(label, state) {
  */
 export function PlannerShell({ phase, visitedPhases, onNavigate, children }) {
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-2xl mx-auto">
       <div className="bg-willow-mist rounded-card shadow-card overflow-hidden">
         {/* Tab bar */}
         <div className="flex items-center border-b-2 border-willow-mist bg-willow-mist/50">
