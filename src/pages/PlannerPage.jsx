@@ -10,6 +10,7 @@ import { StapleChecker } from '../components/StapleChecker'
 import { PantryInput } from '../components/PantryInput'
 import { WeekGrid } from '../components/WeekGrid'
 import { RecipePicker } from '../components/RecipePicker'
+import { DayDetail } from '../components/DayDetail'
 
 export default function PlannerPage() {
   const navigate = useNavigate()
@@ -18,7 +19,10 @@ export default function PlannerPage() {
   const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
   const { stores, loading: storesLoading } = useStores()
 
-  const [activeDay, setActiveDay] = useState(null)
+  // pickerDay: empty day → open RecipePicker directly
+  // detailDay: filled day → open DayDetail bottom sheet
+  const [pickerDay, setPickerDay] = useState(null)
+  const [detailDay, setDetailDay] = useState(null)
 
   const { slots, selectedStapleIds, pantryItems, phase, visitedPhases } = plan
 
@@ -33,7 +37,8 @@ export default function PlannerPage() {
       ? visitedPhases
       : [...visitedPhases, nextPhase]
     updatePlan({ phase: nextPhase, visitedPhases: updatedVisited })
-    setActiveDay(null)
+    setPickerDay(null)
+    setDetailDay(null)
   }
 
   function handleStaplesNext(chosen) {
@@ -59,12 +64,33 @@ export default function PlannerPage() {
   }
 
   function handleSlotClick(day) {
-    setActiveDay(day)
+    const daySlots = slots[day]
+    if (!daySlots || daySlots.length === 0) {
+      setPickerDay(day)
+    } else {
+      setDetailDay(day)
+    }
   }
 
-  function handleSelect(slot) {
-    updatePlan({ slots: { ...slots, [activeDay]: slot } })
-    setActiveDay(null)
+  // Empty day: RecipePicker sets the slot array to a single-item array
+  function handlePickerSelect(slot) {
+    const day = pickerDay
+    updatePlan({ slots: { ...slots, [day]: [slot] } })
+    setPickerDay(null)
+  }
+
+  // DayDetail: append a new slot to the day's array
+  function handleDetailAdd(slot) {
+    const dayArr = slots[detailDay] ?? []
+    updatePlan({ slots: { ...slots, [detailDay]: [...dayArr, slot] } })
+  }
+
+  // DayDetail: remove slot at index; clear day if array empties
+  function handleDetailRemove(index) {
+    const dayArr = slots[detailDay] ?? []
+    const updated = dayArr.filter((_, i) => i !== index)
+    updatePlan({ slots: { ...slots, [detailDay]: updated.length ? updated : null } })
+    if (updated.length === 0) setDetailDay(null)
   }
 
   if (recipesLoading || staplesLoading || planLoading || storesLoading) return (
@@ -77,14 +103,27 @@ export default function PlannerPage() {
       visitedPhases={new Set(visitedPhases)}
       onNavigate={navigatePlanner}
     >
-      {activeDay && (
+      {pickerDay && (
         <RecipePicker
           recipes={recipes}
           categories={categories}
           pantryItems={pantryItems.map(i => i.name)}
-          onSelect={handleSelect}
-          onClose={() => setActiveDay(null)}
-          day={activeDay}
+          onSelect={handlePickerSelect}
+          onClose={() => setPickerDay(null)}
+          day={pickerDay}
+        />
+      )}
+
+      {detailDay && (
+        <DayDetail
+          day={detailDay}
+          slots={slots[detailDay] ?? []}
+          recipes={recipes}
+          categories={categories}
+          pantryItems={pantryItems.map(i => i.name)}
+          onAdd={handleDetailAdd}
+          onRemove={handleDetailRemove}
+          onClose={() => setDetailDay(null)}
         />
       )}
 
