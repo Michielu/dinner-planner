@@ -10,7 +10,7 @@ const TABS = [
 export function BottomNav() {
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-willow-mist border-t border-willow-mist/70 shadow-card"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-willow-mist border-t border-willow-mist/70 shadow-card"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex">
