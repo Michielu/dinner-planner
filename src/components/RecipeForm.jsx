@@ -6,11 +6,12 @@ import { useIngredients } from '../hooks/useIngredients'
  * Props:
  *   categories: Array<{id, name}>
  *   staples: Array<{id, name, store, notes}>
+ *   stores: Array<{value, label, sort_order}>
  *   initial: {name, categoryId, ingredients: [{name, store, id}]} | null
  *   onSave: ({name, categoryId, ingredientIds: string[]}) => Promise<void>
  *   onCancel: () => void
  */
-export function RecipeForm({ categories, staples = [], initial, onSave, onCancel }) {
+export function RecipeForm({ categories, staples = [], stores, initial, onSave, onCancel }) {
   const { ingredients: allIngredients, findOrCreate } = useIngredients()
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
@@ -55,14 +56,8 @@ export function RecipeForm({ categories, staples = [], initial, onSave, onCancel
             // Path 1: already a known ingredient — use existing id directly
             if (r.existingId) return r.existingId
 
-            // Snapshot membership before findOrCreate mutates the ingredients list
-            const normalised = r.name.trim().toLowerCase()
-            const inIngredients = allIngredients.some(i => i.name.toLowerCase() === normalised)
-            const inStaples = staples.some(s => s.name.toLowerCase() === normalised)
-
             // Path 2 & 3: find-or-create in ingredients table
             const id = await findOrCreate(r.name.trim(), r.store)
-
             return id
           })
       )
@@ -109,6 +104,7 @@ export function RecipeForm({ categories, staples = [], initial, onSave, onCancel
             key={row._key}
             allIngredients={allIngredients}
             staples={staples}
+            stores={stores}
             value={row}
             onChange={v => updateRow(row._key, v)}
             onRemove={() => removeRow(row._key)}
