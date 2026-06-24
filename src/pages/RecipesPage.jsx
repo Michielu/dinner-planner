@@ -63,6 +63,9 @@ export default function RecipesPage() {
         categoryId: recipe.category?.id ?? null,
         ingredientIds: recipe.ingredients.filter(i => i.id !== ingredientId).map(i => i.id),
         sourceUrl: recipe.source_url ?? null,
+        isFavorite: recipe.is_favorite,
+        isQuick: recipe.is_quick,
+        isEasy: recipe.is_easy,
       })
     } catch {
       showToast("Couldn't remove ingredient, try again")
@@ -161,7 +164,7 @@ export default function RecipesPage() {
       {displayed.length === 0 && (
         <div className="text-center py-16 text-stone-grey">
           <p className="text-4xl mb-3">🍳</p>
-          <p>No recipes yet. Add your first one!</p>
+          <p>{recipes.length === 0 ? 'No recipes yet. Add your first one!' : 'No recipes match the active filters.'}</p>
         </div>
       )}
 
