@@ -125,7 +125,28 @@ export default function RecipesPage() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Flag filters */}
+      <div className="flex gap-2 mb-3">
+        {[
+          { flag: 'favorite', label: '♥ Favorite' },
+          { flag: 'quick',    label: '⚡ Quick'    },
+          { flag: 'easy',     label: '✓ Easy'      },
+        ].map(({ flag, label }) => (
+          <button
+            key={flag}
+            onClick={() => toggleFlagFilter(flag)}
+            className={`flex-1 border-2 rounded-2xl py-2 text-sm font-bold transition-colors ${
+              activeFlags.has(flag)
+                ? 'border-garden-patch bg-garden-patch/10 text-garden-patch'
+                : 'border-willow-mist text-stone-grey hover:border-garden-patch/40 hover:text-soil-shadow'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Category filter */}
       <div className="flex gap-2 flex-wrap mb-5">
         {[{ id: 'all', name: 'All' }, ...categories].map(c => (
           <button
@@ -138,24 +159,6 @@ export default function RecipesPage() {
             }`}
           >
             {c.name}
-          </button>
-        ))}
-        <span className="w-px bg-willow-mist mx-1" />
-        {[
-          { flag: 'favorite', label: '♥ Favorites' },
-          { flag: 'quick',    label: '⚡ Quick'     },
-          { flag: 'easy',     label: '✓ Easy'       },
-        ].map(({ flag, label }) => (
-          <button
-            key={flag}
-            onClick={() => toggleFlagFilter(flag)}
-            className={`px-3 py-1.5 rounded-pill text-xs font-bold transition-colors ${
-              activeFlags.has(flag)
-                ? 'bg-garden-patch text-fresh-herb'
-                : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
-            }`}
-          >
-            {label}
           </button>
         ))}
       </div>
