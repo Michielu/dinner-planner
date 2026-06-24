@@ -27,6 +27,9 @@ export function RecipeForm({ categories, staples = [], stores, initial, onSave, 
   )
   const [nextKey, setNextKey] = useState(initial?.ingredients?.length ?? 0)
   const [saving, setSaving] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(initial?.isFavorite ?? false)
+  const [isQuick, setIsQuick] = useState(initial?.isQuick ?? false)
+  const [isEasy, setIsEasy] = useState(initial?.isEasy ?? false)
 
   function addRow() {
     const key = `row-${nextKey}`
@@ -62,7 +65,15 @@ export function RecipeForm({ categories, staples = [], stores, initial, onSave, 
             return id
           })
       )
-      await onSave({ name: name.trim(), categoryId: categoryId || null, ingredientIds, sourceUrl: sourceUrl.trim() || null })
+      await onSave({
+        name: name.trim(),
+        categoryId: categoryId || null,
+        ingredientIds,
+        sourceUrl: sourceUrl.trim() || null,
+        isFavorite,
+        isQuick,
+        isEasy,
+      })
     } finally {
       setSaving(false)
     }
@@ -104,6 +115,27 @@ export function RecipeForm({ categories, staples = [], stores, initial, onSave, 
           type="text"
           className="w-full border border-willow-mist rounded-xl bg-field-cream px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
         />
+        {/* Flags */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: 'isFavorite', label: '♥ Favorite', value: isFavorite, set: setIsFavorite },
+            { key: 'isQuick',    label: '⚡ Quick',    value: isQuick,    set: setIsQuick    },
+            { key: 'isEasy',     label: '✓ Easy',      value: isEasy,     set: setIsEasy     },
+          ].map(flag => (
+            <button
+              key={flag.key}
+              type="button"
+              onClick={() => flag.set(v => !v)}
+              className={`px-3 py-1.5 rounded-pill text-xs font-bold transition-colors ${
+                flag.value
+                  ? 'bg-garden-patch text-fresh-herb'
+                  : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
+              }`}
+            >
+              {flag.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Ingredients */}
