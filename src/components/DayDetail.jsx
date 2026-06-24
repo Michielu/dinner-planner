@@ -22,6 +22,15 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
   const [picking, setPicking] = useState(slots.length === 0)
   const [filterCategory, setFilterCategory] = useState('all')
   const [search, setSearch] = useState('')
+  const [activeFlags, setActiveFlags] = useState(new Set())
+
+  function toggleFlagFilter(flag) {
+    setActiveFlags(prev => {
+      const next = new Set(prev)
+      next.has(flag) ? next.delete(flag) : next.add(flag)
+      return next
+    })
+  }
 
   const normalised = pantryItems.map(p => p.toLowerCase())
 
@@ -36,25 +45,30 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
     ? recipes.filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
     : recipes
 
-  const byCategory = filterCategory === 'all'
-    ? bySearch
-    : bySearch.filter(r => r.category?.id === filterCategory)
+  const byCategory = bySearch
+    .filter(r => filterCategory === 'all' || r.category?.id === filterCategory)
+    .filter(r => !activeFlags.has('favorite') || r.is_favorite)
+    .filter(r => !activeFlags.has('quick')    || r.is_quick)
+    .filter(r => !activeFlags.has('easy')     || r.is_easy)
 
   const pantryMatches = byCategory.filter(matchesPantry)
   const rest = byCategory.filter(r => !matchesPantry(r))
 
-  function handlePick(slot) {
-    onAdd(slot)
+  function resetPicker() {
     setPicking(false)
     setSearch('')
     setFilterCategory('all')
+    setActiveFlags(new Set())
+  }
+
+  function handlePick(slot) {
+    onAdd(slot)
+    resetPicker()
   }
 
   function handleBackdropClick() {
     if (picking) {
-      setPicking(false)
-      setSearch('')
-      setFilterCategory('all')
+      resetPicker()
     } else {
       onClose()
     }
@@ -78,7 +92,7 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
         <div className="px-5 py-4 flex items-center justify-between border-b border-willow-mist">
           {picking ? (
             <button
-              onClick={() => { setPicking(false); setSearch(''); setFilterCategory('all') }}
+              onClick={resetPicker}
               className="text-sm text-stone-grey hover:text-soil-shadow"
             >
               ← Back
@@ -160,7 +174,7 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
               />
             </div>
 
-            {/* Category filter */}
+            {/* Category + flag filters */}
             <div className="px-4 pb-2 flex gap-2 flex-wrap border-b border-willow-mist">
               {[{ id: 'all', name: 'All' }, ...categories].map(c => (
                 <button
@@ -173,6 +187,24 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                   }`}
                 >
                   {c.name}
+                </button>
+              ))}
+              <span className="w-px bg-willow-mist mx-0.5" />
+              {[
+                { flag: 'favorite', label: '♥' },
+                { flag: 'quick',    label: '⚡' },
+                { flag: 'easy',     label: '✓'  },
+              ].map(({ flag, label }) => (
+                <button
+                  key={flag}
+                  onClick={() => toggleFlagFilter(flag)}
+                  className={`px-3 py-1 rounded-pill text-xs font-bold transition-colors ${
+                    activeFlags.has(flag)
+                      ? 'bg-garden-patch text-fresh-herb'
+                      : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
+                  }`}
+                >
+                  {label}
                 </button>
               ))}
             </div>
@@ -195,6 +227,11 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                           .map(i => i.name)
                           .join(', ')}
                       </span>
+                      <span className="ml-1 inline-flex gap-1">
+                        {r.is_favorite && <span className="text-xs text-garden-patch">♥</span>}
+                        {r.is_quick    && <span className="text-xs text-stone-grey">⚡</span>}
+                        {r.is_easy     && <span className="text-xs text-stone-grey">✓</span>}
+                      </span>
                     </button>
                   ))}
                   {rest.length > 0 && <hr className="border-willow-mist my-2" />}
@@ -207,6 +244,11 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                   className="w-full text-left px-4 py-3 rounded-2xl bg-willow-mist hover:bg-fresh-herb/20 transition-colors"
                 >
                   <span className="text-sm font-bold text-soil-shadow uppercase">{r.name}</span>
+                  <span className="ml-1 inline-flex gap-1">
+                    {r.is_favorite && <span className="text-xs text-garden-patch">♥</span>}
+                    {r.is_quick    && <span className="text-xs text-stone-grey">⚡</span>}
+                    {r.is_easy     && <span className="text-xs text-stone-grey">✓</span>}
+                  </span>
                 </button>
               ))}
               {byCategory.length === 0 && (
