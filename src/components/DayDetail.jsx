@@ -5,19 +5,12 @@ const SLOT_LABEL = {
   flex: '🎲 Flex Night',
 }
 
-/**
- * Bottom-sheet modal for viewing/editing meals assigned to a single day.
- *
- * Props:
- *   day: string — e.g. 'monday'
- *   slots: slot[] — current array of slots for this day
- *   recipes: Array<{id, name, category, ingredients: [{id, name}]}>
- *   categories: Array<{id, name}>
- *   pantryItems: string[]
- *   onAdd: (slot: {type, recipe?}) => void
- *   onRemove: (index: number) => void
- *   onClose: () => void
- */
+const FLAGS = [
+  { flag: 'favorite', icon: '♥', label: 'Favorite' },
+  { flag: 'quick',    icon: '⚡', label: 'Quick'   },
+  { flag: 'easy',     icon: '✓', label: 'Easy'     },
+]
+
 export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd, onRemove, onClose }) {
   const [picking, setPicking] = useState(slots.length === 0)
   const [filterCategory, setFilterCategory] = useState('all')
@@ -67,11 +60,8 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
   }
 
   function handleBackdropClick() {
-    if (picking) {
-      resetPicker()
-    } else {
-      onClose()
-    }
+    if (picking) resetPicker()
+    else onClose()
   }
 
   return (
@@ -91,10 +81,7 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
         {/* Header */}
         <div className="px-5 py-4 flex items-center justify-between border-b border-willow-mist">
           {picking ? (
-            <button
-              onClick={resetPicker}
-              className="text-sm text-stone-grey hover:text-soil-shadow"
-            >
+            <button onClick={resetPicker} className="text-sm text-stone-grey hover:text-soil-shadow">
               ← Back
             </button>
           ) : (
@@ -164,8 +151,25 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
               </button>
             </div>
 
+            {/* Flag toggles */}
+            <div className="px-4 pt-2 pb-2 flex gap-2">
+              {FLAGS.map(({ flag, icon, label }) => (
+                <button
+                  key={flag}
+                  onClick={() => toggleFlagFilter(flag)}
+                  className={`flex-1 border-2 rounded-2xl py-2 text-sm font-bold transition-colors ${
+                    activeFlags.has(flag)
+                      ? 'border-garden-patch bg-garden-patch/10 text-garden-patch'
+                      : 'border-willow-mist text-stone-grey hover:border-garden-patch/40 hover:text-soil-shadow'
+                  }`}
+                >
+                  {icon} {label}
+                </button>
+              ))}
+            </div>
+
             {/* Search */}
-            <div className="px-4 pt-3 pb-2">
+            <div className="px-4 pt-1 pb-2">
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -174,8 +178,8 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
               />
             </div>
 
-            {/* Category + flag filters */}
-            <div className="px-4 pb-2 flex gap-2 flex-wrap border-b border-willow-mist">
+            {/* Category filter */}
+            <div className="px-4 pb-3 flex gap-2 flex-wrap border-b border-willow-mist">
               {[{ id: 'all', name: 'All' }, ...categories].map(c => (
                 <button
                   key={c.id}
@@ -187,24 +191,6 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                   }`}
                 >
                   {c.name}
-                </button>
-              ))}
-              <span className="w-px bg-willow-mist mx-0.5" />
-              {[
-                { flag: 'favorite', label: '♥' },
-                { flag: 'quick',    label: '⚡' },
-                { flag: 'easy',     label: '✓'  },
-              ].map(({ flag, label }) => (
-                <button
-                  key={flag}
-                  onClick={() => toggleFlagFilter(flag)}
-                  className={`px-3 py-1 rounded-pill text-xs font-bold transition-colors ${
-                    activeFlags.has(flag)
-                      ? 'bg-garden-patch text-fresh-herb'
-                      : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
-                  }`}
-                >
-                  {label}
                 </button>
               ))}
             </div>
