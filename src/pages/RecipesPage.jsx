@@ -7,16 +7,27 @@ import { RecipeImport } from '../components/RecipeImport'
 import { useToast, Toast } from '../components/Toast'
 
 export default function RecipesPage() {
-  const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe } = useRecipes()
+  const { recipes, categories, loading, addRecipe, updateRecipe, deleteRecipe, toggleFlag } = useRecipes()
   const { staples, loading: staplesLoading } = useStaples()
   const { stores, loading: storesLoading } = useStores()
   const { toast, showToast, dismissToast } = useToast()
   const [mode, setMode] = useState(null) // null | 'add' | 'import' | {edit: recipe}
   const [filterCategory, setFilterCategory] = useState('all')
+  const [activeFlags, setActiveFlags] = useState(new Set())
 
-  const displayed = filterCategory === 'all'
-    ? recipes
-    : recipes.filter(r => r.category?.id === filterCategory)
+  function toggleFlagFilter(flag) {
+    setActiveFlags(prev => {
+      const next = new Set(prev)
+      next.has(flag) ? next.delete(flag) : next.add(flag)
+      return next
+    })
+  }
+
+  const displayed = recipes
+    .filter(r => filterCategory === 'all' || r.category?.id === filterCategory)
+    .filter(r => !activeFlags.has('favorite') || r.is_favorite)
+    .filter(r => !activeFlags.has('quick')    || r.is_quick)
+    .filter(r => !activeFlags.has('easy')     || r.is_easy)
 
   async function handleAdd(data) {
     try {
@@ -111,7 +122,7 @@ export default function RecipesPage() {
         </div>
       )}
 
-      {/* Category filter */}
+      {/* Filters */}
       <div className="flex gap-2 flex-wrap mb-5">
         {[{ id: 'all', name: 'All' }, ...categories].map(c => (
           <button
@@ -124,6 +135,24 @@ export default function RecipesPage() {
             }`}
           >
             {c.name}
+          </button>
+        ))}
+        <span className="w-px bg-willow-mist mx-1" />
+        {[
+          { flag: 'favorite', label: '♥ Favorites' },
+          { flag: 'quick',    label: '⚡ Quick'     },
+          { flag: 'easy',     label: '✓ Easy'       },
+        ].map(({ flag, label }) => (
+          <button
+            key={flag}
+            onClick={() => toggleFlagFilter(flag)}
+            className={`px-3 py-1.5 rounded-pill text-xs font-bold transition-colors ${
+              activeFlags.has(flag)
+                ? 'bg-garden-patch text-fresh-herb'
+                : 'bg-willow-mist text-stone-grey hover:bg-garden-patch/10'
+            }`}
+          >
+            {label}
           </button>
         ))}
       </div>
@@ -144,26 +173,60 @@ export default function RecipesPage() {
                 categories={categories}
                 staples={staples}
                 stores={stores}
-                initial={{ name: recipe.name, categoryId: recipe.category?.id, sourceUrl: recipe.source_url ?? '', ingredients: recipe.ingredients }}
+                initial={{
+                  name: recipe.name,
+                  categoryId: recipe.category?.id,
+                  sourceUrl: recipe.source_url ?? '',
+                  ingredients: recipe.ingredients,
+                  isFavorite: recipe.is_favorite,
+                  isQuick: recipe.is_quick,
+                  isEasy: recipe.is_easy,
+                }}
                 onSave={handleUpdate}
                 onCancel={() => setMode(null)}
               />
             ) : (
               <div>
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <span className="font-bold text-soil-shadow uppercase">{recipe.name}</span>
                     {recipe.category && (
-                      <span className="ml-2 text-xs bg-garden-patch/10 text-garden-patch font-bold px-2 py-0.5 rounded-pill uppercase">
+                      <span className="text-xs bg-garden-patch/10 text-garden-patch font-bold px-2 py-0.5 rounded-pill uppercase">
                         {recipe.category.name}
                       </span>
+                    )}
+                    {recipe.is_favorite && (
+                      <button
+                        type="button"
+                        onClick={() => toggleFlag(recipe.id, 'is_favorite', false)}
+                        className="text-xs bg-garden-patch text-fresh-herb font-bold px-2 py-0.5 rounded-pill"
+                        title="Remove from favorites"
+                      >
+                        ♥
+                      </button>
+                    )}
+                    {!recipe.is_favorite && (
+                      <button
+                        type="button"
+                        onClick={() => toggleFlag(recipe.id, 'is_favorite', true)}
+                        className="text-xs bg-willow-mist text-stone-grey font-bold px-2 py-0.5 rounded-pill hover:bg-garden-patch/10"
+                        title="Add to favorites"
+                      >
+                        ♡
+                      </button>
+                    )}
+                    {recipe.is_quick && (
+                      <span className="text-xs bg-willow-mist text-stone-grey font-bold px-2 py-0.5 rounded-pill">⚡ Quick</span>
+                    )}
+                    {recipe.is_easy && (
+                      <span className="text-xs bg-willow-mist text-stone-grey font-bold px-2 py-0.5 rounded-pill">✓ Easy</span>
                     )}
                     {recipe.source_url && (
                       <a
                         href={recipe.source_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-2 text-xs text-stone-grey hover:text-garden-patch transition-colors"
+                        className="text-xs text-stone-grey hover:text-garden-patch transition-colors"
                         onClick={e => e.stopPropagation()}
                       >
                         Source ↗
