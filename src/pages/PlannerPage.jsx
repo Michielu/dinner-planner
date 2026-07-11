@@ -4,6 +4,7 @@ import { useRecipes } from '../hooks/useRecipes'
 import { useStaples } from '../hooks/useStaples'
 import { useWeekPlan } from '../hooks/useWeekPlan'
 import { useStores } from '../hooks/useStores'
+import { useIngredients } from '../hooks/useIngredients'
 import { resolveSelectedStaples } from '../utils/weekPlan'
 import { PlannerShell } from '../components/PlannerShell'
 import { StapleChecker } from '../components/StapleChecker'
@@ -17,6 +18,7 @@ export default function PlannerPage() {
   const { staples, loading: staplesLoading } = useStaples()
   const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
   const { stores, loading: storesLoading } = useStores()
+  const { ingredients } = useIngredients()
 
   const [detailDay, setDetailDay] = useState(null)
 
@@ -58,17 +60,11 @@ export default function PlannerPage() {
     updatePlan({ pantryItems: items, phase: 'plan', visitedPhases: updatedVisited })
   }
 
-  function handleSlotClick(day) {
-    setDetailDay(day)
-  }
-
-  // DayDetail: append a new slot to the day's array
   function handleDetailAdd(slot) {
     const dayArr = slots[detailDay] ?? []
     updatePlan({ slots: { ...slots, [detailDay]: [...dayArr, slot] } })
   }
 
-  // DayDetail: remove slot at index; clear day if array empties
   function handleDetailRemove(index) {
     const dayArr = slots[detailDay] ?? []
     const updated = dayArr.filter((_, i) => i !== index)
@@ -96,6 +92,7 @@ export default function PlannerPage() {
           onAdd={handleDetailAdd}
           onRemove={handleDetailRemove}
           onClose={() => setDetailDay(null)}
+          ingredients={ingredients}
         />
       )}
 
@@ -127,7 +124,7 @@ export default function PlannerPage() {
             )}
           </div>
 
-          <WeekGrid slots={slots} onSlotClick={handleSlotClick} />
+          <WeekGrid slots={slots} onSlotClick={day => setDetailDay(day)} />
 
           <div className="mt-6 flex justify-end">
             <button
