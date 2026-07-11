@@ -49,6 +49,17 @@ export function generateGroceryList(slots, recipes, staples, addedIngredients = 
     result[ing.store].push({ name: ing.name, isStaple: false, isAdded: true, id: ing.id })
   }
 
+  for (const slot of slots) {
+    if (slot.type !== 'pinned_ingredient' || !slot.ingredient) continue
+    const { name, store } = slot.ingredient
+    const day = slot.day.charAt(0).toUpperCase() + slot.day.slice(1)
+    if (!result[store]) result[store] = []
+    const duplicate = result[store].some(i => i.isPinned && i.name === name && i.day === day)
+    if (!duplicate) {
+      result[store].push({ name, isStaple: false, isAdded: false, isPinned: true, day })
+    }
+  }
+
   for (const store of Object.keys(result)) {
     result[store].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
   }

@@ -155,4 +155,56 @@ describe('generateGroceryList', () => {
       ])
     )
   })
+
+  it('places pinned_ingredient slots into the correct store bucket', () => {
+    const slots = [
+      { day: 'wednesday', type: 'pinned_ingredient', ingredient: { id: 'p1', name: 'broccoli', store: 'aldi' } },
+    ]
+    const result = generateGroceryList(slots, [], [], [], TEST_STORES)
+    expect(result.aldi).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'broccoli', isStaple: false, isAdded: false, isPinned: true, day: 'Wednesday' }),
+      ])
+    )
+  })
+
+  it('pinned_ingredient day is title-cased', () => {
+    const slots = [
+      { day: 'friday', type: 'pinned_ingredient', ingredient: { id: 'p2', name: 'olive oil', store: 'target' } },
+    ]
+    const result = generateGroceryList(slots, [], [], [], TEST_STORES)
+    expect(result.target[0].day).toBe('Friday')
+  })
+
+  it('deduplicates same pinned ingredient on the same day', () => {
+    const slots = [
+      { day: 'monday', type: 'pinned_ingredient', ingredient: { id: 'p1', name: 'broccoli', store: 'aldi' } },
+      { day: 'monday', type: 'pinned_ingredient', ingredient: { id: 'p1', name: 'broccoli', store: 'aldi' } },
+    ]
+    const result = generateGroceryList(slots, [], [], [], TEST_STORES)
+    expect(result.aldi.filter(i => i.name === 'broccoli')).toHaveLength(1)
+  })
+
+  it('pinned ingredients from different days both appear', () => {
+    const slots = [
+      { day: 'monday', type: 'pinned_ingredient', ingredient: { id: 'p1', name: 'broccoli', store: 'aldi' } },
+      { day: 'thursday', type: 'pinned_ingredient', ingredient: { id: 'p1', name: 'broccoli', store: 'aldi' } },
+    ]
+    const result = generateGroceryList(slots, [], [], [], TEST_STORES)
+    expect(result.aldi.filter(i => i.name === 'broccoli')).toHaveLength(2)
+  })
+
+  it('pinned ingredients coexist with recipe ingredients in same store', () => {
+    const slots = [
+      { day: 'monday', type: 'recipe', recipeId: 'r1' },
+      { day: 'tuesday', type: 'pinned_ingredient', ingredient: { id: 'p1', name: 'broccoli', store: 'aldi' } },
+    ]
+    const result = generateGroceryList(slots, RECIPES, [], [], TEST_STORES)
+    expect(result.aldi).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'pasta', isStaple: false }),
+        expect.objectContaining({ name: 'broccoli', isPinned: true }),
+      ])
+    )
+  })
 })
