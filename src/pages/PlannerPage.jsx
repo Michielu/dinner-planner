@@ -18,7 +18,7 @@ export default function PlannerPage() {
   const { staples, loading: staplesLoading } = useStaples()
   const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
   const { stores, loading: storesLoading } = useStores()
-  const { ingredients } = useIngredients()
+  const { ingredients, loading: ingredientsLoading } = useIngredients()
 
   const [detailDay, setDetailDay] = useState(null)
 
@@ -72,7 +72,7 @@ export default function PlannerPage() {
     if (updated.length === 0) setDetailDay(null)
   }
 
-  if (recipesLoading || staplesLoading || planLoading || storesLoading) return (
+  if (recipesLoading || staplesLoading || planLoading || storesLoading || ingredientsLoading) return (
     <div className="p-6 text-stone-grey font-body">Loading…</div>
   )
 
