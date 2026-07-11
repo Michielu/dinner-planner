@@ -17,7 +17,7 @@ export function WeekGrid({ slots, onSlotClick }) {
         const key = day.toLowerCase()
         const slotArr = slots[key] ?? []
         const recipes = slotArr.filter(s => s.type === 'recipe')
-        const special = slotArr.find(s => s.type !== 'recipe')
+        const special = slotArr.find(s => s.type === 'eating_out' || s.type === 'flex')
 
         return (
           <button
