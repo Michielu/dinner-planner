@@ -30,6 +30,8 @@ export function GroceryList({ slots, recipes, staples, stores, addedIngredients 
       for (const item of items) {
         const hint = item.isStaple
           ? (item.notes ? ` — ${item.notes}` : '')
+          : item.isPinned
+          ? ` (${item.day})`
           : item.meals?.length > 1
           ? ` (${item.meals.length} meals)`
           : item.meals?.length === 1
@@ -82,6 +84,8 @@ export function GroceryList({ slots, recipes, staples, stores, addedIngredients 
                         </button>
                       ) : item.isStaple ? (
                         <span className="text-xs text-stone-grey shrink-0">staple</span>
+                      ) : item.isPinned ? (
+                        <span className="text-xs text-stone-grey shrink-0 truncate max-w-[120px]">{item.day}</span>
                       ) : item.meals?.length > 1 ? (
                         <span className="text-xs text-stone-grey shrink-0">{item.meals.length} meals</span>
                       ) : item.meals?.length === 1 ? (
