@@ -13,12 +13,14 @@ const FLAGS = [
 
 const MEAL_TYPES = new Set(['recipe', 'eating_out', 'flex'])
 
-export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd, onRemove, onClose, ingredients = [] }) {
+export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd, onRemove, onClose, ingredients = [], stores = [], onCreateIngredient }) {
   const [mode, setMode] = useState(null) // null | 'meal' | 'ingredient'
   const [filterCategory, setFilterCategory] = useState('all')
   const [search, setSearch] = useState('')
   const [activeFlags, setActiveFlags] = useState(new Set())
   const [ingSearch, setIngSearch] = useState('')
+  const [expanded, setExpanded] = useState(false)
+  const [createStore, setCreateStore] = useState(() => stores[0]?.value ?? '')
 
   // Attach original index so onRemove receives the right position in the full slots array
   const mealSlots = slots
@@ -65,17 +67,29 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
     ? ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase()))
     : ingredients
 
+  const showCreate = ingSearch.trim().length > 0 &&
+    !ingredients.some(i => i.name.toLowerCase() === ingSearch.trim().toLowerCase())
+
   function resetPicker() {
     setMode(null)
     setSearch('')
     setIngSearch('')
     setFilterCategory('all')
     setActiveFlags(new Set())
+    setExpanded(false)
+    setCreateStore(stores[0]?.value ?? '')
   }
 
   function handlePickRecipe(slot) { onAdd(slot); resetPicker() }
   function handlePickIngredient(ing) {
     onAdd({ type: 'pinned_ingredient', ingredient: { id: ing.id, name: ing.name, store: ing.store } })
+    resetPicker()
+  }
+
+  async function handleCreateIngredient() {
+    const name = ingSearch.trim()
+    const id = await onCreateIngredient(name, createStore)
+    onAdd({ type: 'pinned_ingredient', ingredient: { id, name, store: createStore } })
     resetPicker()
   }
 
@@ -273,16 +287,13 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
         ) : (
           <>
             <div className="px-4 pt-3 pb-2">
-              <input value={ingSearch} onChange={e => setIngSearch(e.target.value)}
+              <input value={ingSearch} onChange={e => { setIngSearch(e.target.value); setExpanded(false) }}
                 placeholder="Search ingredients…"
                 autoFocus
                 className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
               />
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-              {filteredIngredients.length === 0 && (
-                <p className="text-center text-stone-grey text-sm py-6">No ingredients found.</p>
-              )}
               {filteredIngredients.map(ing => (
                 <button
                   key={ing.id}
@@ -298,6 +309,49 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                   {alreadyPinnedIds.has(ing.id) && <span className="ml-2 text-xs text-stone-grey/50">added</span>}
                 </button>
               ))}
+
+              {showCreate && !expanded && (
+                <button
+                  onClick={() => setExpanded(true)}
+                  className="w-full flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-garden-patch/40 text-garden-patch hover:border-garden-patch hover:bg-garden-patch/5 transition-colors"
+                >
+                  <span className="text-lg leading-none">+</span>
+                  <span className="text-sm font-bold">Create &ldquo;{ingSearch.trim()}&rdquo;</span>
+                </button>
+              )}
+
+              {showCreate && expanded && (
+                <div className="rounded-2xl border-2 border-garden-patch/50 bg-garden-patch/5 px-4 py-3 space-y-3">
+                  <p className="text-sm font-bold text-soil-shadow">
+                    + Create &ldquo;{ingSearch.trim()}&rdquo;
+                  </p>
+                  <div className="flex gap-2 items-center">
+                    <select
+                      value={createStore}
+                      onChange={e => setCreateStore(e.target.value)}
+                      className="flex-1 border border-willow-mist rounded-xl bg-field-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+                    >
+                      {stores.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </select>
+                    <button
+                      onClick={handleCreateIngredient}
+                      className="bg-garden-patch text-fresh-herb font-bold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-opacity"
+                    >
+                      Add
+                    </button>
+                    <button
+                      onClick={() => setExpanded(false)}
+                      className="text-stone-grey hover:text-soil-shadow text-sm px-2 py-2 leading-none"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {filteredIngredients.length === 0 && !showCreate && (
+                <p className="text-center text-stone-grey text-sm py-6">No ingredients found.</p>
+              )}
             </div>
           </>
         )}
