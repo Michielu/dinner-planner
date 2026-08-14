@@ -18,7 +18,7 @@ export default function PlannerPage() {
   const { staples, loading: staplesLoading } = useStaples()
   const { plan, planCreatedAt, loading: planLoading, updatePlan } = useWeekPlan()
   const { stores, loading: storesLoading } = useStores()
-  const { ingredients, loading: ingredientsLoading } = useIngredients()
+  const { ingredients, loading: ingredientsLoading, findOrCreate } = useIngredients()
 
   const [detailDay, setDetailDay] = useState(null)
 
@@ -72,6 +72,10 @@ export default function PlannerPage() {
     if (updated.length === 0) setDetailDay(null)
   }
 
+  async function handleCreateIngredient(name, store) {
+    return findOrCreate(name, store)
+  }
+
   if (recipesLoading || staplesLoading || planLoading || storesLoading || ingredientsLoading) return (
     <div className="p-6 text-stone-grey font-body">Loading…</div>
   )
@@ -93,6 +97,8 @@ export default function PlannerPage() {
           onRemove={handleDetailRemove}
           onClose={() => setDetailDay(null)}
           ingredients={ingredients}
+          stores={stores}
+          onCreateIngredient={handleCreateIngredient}
         />
       )}
 
