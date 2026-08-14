@@ -21,6 +21,7 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
   const [ingSearch, setIngSearch] = useState('')
   const [expanded, setExpanded] = useState(false)
   const [createStore, setCreateStore] = useState(() => stores[0]?.value ?? '')
+  const [isCreating, setIsCreating] = useState(false)
 
   // Attach original index so onRemove receives the right position in the full slots array
   const mealSlots = slots
@@ -78,6 +79,7 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
     setActiveFlags(new Set())
     setExpanded(false)
     setCreateStore(stores[0]?.value ?? '')
+    setIsCreating(false)
   }
 
   function handlePickRecipe(slot) { onAdd(slot); resetPicker() }
@@ -88,9 +90,16 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
 
   async function handleCreateIngredient() {
     const name = ingSearch.trim()
-    const id = await onCreateIngredient(name, createStore)
-    onAdd({ type: 'pinned_ingredient', ingredient: { id, name, store: createStore } })
-    resetPicker()
+    setIsCreating(true)
+    try {
+      const id = await onCreateIngredient(name, createStore)
+      onAdd({ type: 'pinned_ingredient', ingredient: { id, name, store: createStore } })
+      resetPicker()
+    } catch (err) {
+      console.error('Failed to create ingredient:', err)
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   function handleBackdropClick() {
@@ -335,9 +344,10 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                     </select>
                     <button
                       onClick={handleCreateIngredient}
-                      className="bg-garden-patch text-fresh-herb font-bold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-opacity"
+                      disabled={isCreating}
+                      className="bg-garden-patch text-fresh-herb font-bold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
-                      Add
+                      {isCreating ? '…' : 'Add'}
                     </button>
                     <button
                       onClick={() => setExpanded(false)}
