@@ -1,16 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        'field-cream':  '#f4f3e7',
-        'willow-mist':  '#d8e5d6',
-        'grain-sand':   '#e8dcc6',
-        'soil-shadow':  '#0e150e',
-        'stone-grey':   '#8c8c82',
-        'garden-patch': '#00473c',
-        'fresh-herb':   '#7aaa6a',
+        'field-cream':  'rgb(var(--color-field-cream) / <alpha-value>)',
+        'willow-mist':  'rgb(var(--color-willow-mist) / <alpha-value>)',
+        'grain-sand':   'rgb(var(--color-grain-sand) / <alpha-value>)',
+        'soil-shadow':  'rgb(var(--color-soil-shadow) / <alpha-value>)',
+        'stone-grey':   'rgb(var(--color-stone-grey) / <alpha-value>)',
+        'garden-patch': 'rgb(var(--color-garden-patch) / <alpha-value>)',
+        'fresh-herb':   'rgb(var(--color-fresh-herb) / <alpha-value>)',
       },
       fontFamily: {
         display: ['Montserrat', 'sans-serif'],
@@ -21,10 +22,9 @@ export default {
         'pill': '1000px',
       },
       boxShadow: {
-        'card': 'rgba(14,21,14,0.4) 3px 3px 32px -10px',
+        'card': 'var(--shadow-card) 3px 3px 32px -10px',
       },
     },
   },
   plugins: [],
 }
-

@@ -2,6 +2,7 @@ import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom'
 import { ConnectionBanner } from './components/ConnectionBanner'
 import { BottomNav } from './components/BottomNav'
 import { useAuth } from './hooks/useAuth'
+import { useDarkMode } from './hooks/useDarkMode'
 import PlannerPage from './pages/PlannerPage'
 import RecipesPage from './pages/RecipesPage'
 import ManagePage from './pages/ManagePage'
@@ -29,6 +30,7 @@ export default function App() {
   const { email, signOut } = useAuth()
   const location = useLocation()
   const isLoginRoute = location.pathname === '/login'
+  const [isDark, toggleDark] = useDarkMode()
 
   if (!email && !isLoginRoute) {
     return <Navigate to="/login" replace />
@@ -48,10 +50,17 @@ export default function App() {
             <NavItem to="/grocery" label="Grocery List" />
             <NavItem to="/manage" label="Catalog" />
           </div>
-          <div className="ml-auto hidden md:block">
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={toggleDark}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-garden-patch/10 transition-colors text-base"
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
             <button
               onClick={signOut}
-              className="text-xs text-stone-grey hover:text-soil-shadow transition-colors"
+              className="hidden md:block text-xs text-stone-grey hover:text-soil-shadow transition-colors"
             >
               Sign out
             </button>

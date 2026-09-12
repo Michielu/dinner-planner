@@ -2,10 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* RGB channels — used by Tailwind color utilities and opacity modifiers */
+  --color-field-cream:  244 243 231;
+  --color-willow-mist:  216 229 214;
+  --color-grain-sand:   232 220 198;
+  --color-soil-shadow:  14 21 14;
+  --color-stone-grey:   140 140 130;
+  --color-garden-patch: 0 71 60;
+  --color-fresh-herb:   122 170 106;
+  --shadow-card: rgba(14, 21, 14, 0.4) 3px 3px 32px -10px;
+}
+
+.dark {
+  --color-field-cream:  17 26 13;
+  --color-willow-mist:  30 47 25;
+  --color-grain-sand:   26 44 21;
+  --color-soil-shadow:  240 237 224;
+  --color-stone-grey:   122 138 114;
+  --color-garden-patch: 122 170 106;
+  --color-fresh-herb:   58 100 46;
+  --shadow-card: rgba(0, 0, 0, 0.5) 3px 3px 32px -10px;
+}
+
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f4f3e7;
-  color: #0e150e;
+  background-color: rgb(var(--color-field-cream));
+  color: rgb(var(--color-soil-shadow));
 }
 
 @media (max-width: 768px) {
