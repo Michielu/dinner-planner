@@ -60,6 +60,8 @@ export function useRecipes() {
         is_favorite: isFavorite,
         is_quick: isQuick,
         is_easy: isEasy,
+        // New recipes are shared by default; copies stay private so they don't duplicate the original
+        is_shared: !copiedFromRecipeId,
         copied_from_recipe_id: copiedFromRecipeId,
         copied_from_email: copiedFromEmail,
         user_email: email,
