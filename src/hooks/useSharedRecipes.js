@@ -32,23 +32,34 @@ export function useSharedRecipes() {
 
     const ids = data.map(r => r.id)
     const saveCounts = {}
+    const favoriteCounts = {}
     if (ids.length > 0) {
       const { data: copies, error: copiesErr } = await supabase
         .from('recipes')
-        .select('copied_from_recipe_id')
+        .select('copied_from_recipe_id, is_favorite')
         .in('copied_from_recipe_id', ids)
       if (copiesErr) { setError(copiesErr); setLoading(false); return }
       copies.forEach(c => {
-        saveCounts[c.copied_from_recipe_id] = (saveCounts[c.copied_from_recipe_id] ?? 0) + 1
+        const id = c.copied_from_recipe_id
+        saveCounts[id] = (saveCounts[id] ?? 0) + 1
+        if (c.is_favorite) favoriteCounts[id] = (favoriteCounts[id] ?? 0) + 1
       })
     }
 
+    // favorites = the sharer's own ♥ plus every copy marked ♥; most favorited first, then most saved, then A–Z
     setSharedRecipes(
-      data.map(r => ({
-        ...r,
-        ingredients: r.recipe_ingredients.map(ri => ri.ingredient).filter(Boolean),
-        saves: saveCounts[r.id] ?? 0,
-      }))
+      data
+        .map(r => {
+          const favorites = (r.is_favorite ? 1 : 0) + (favoriteCounts[r.id] ?? 0)
+          return {
+            ...r,
+            ingredients: r.recipe_ingredients.map(ri => ri.ingredient).filter(Boolean),
+            saves: saveCounts[r.id] ?? 0,
+            favorites,
+            is_favorite: favorites > 0,
+          }
+        })
+        .sort((a, b) => b.favorites - a.favorites || b.saves - a.saves || a.name.localeCompare(b.name))
     )
     setLoading(false)
   }, [email])

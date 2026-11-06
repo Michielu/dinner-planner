@@ -323,7 +323,7 @@ export default function RecipesPage() {
                         </span>
                       )}
                       {recipe.is_favorite && (
-                        <span className="text-xs bg-garden-patch text-fresh-herb font-bold px-2 py-0.5 rounded-pill">♥</span>
+                        <span className="text-xs bg-garden-patch text-fresh-herb font-bold px-2 py-0.5 rounded-pill">♥ {recipe.favorites}</span>
                       )}
                       {recipe.is_quick && (
                         <span className="text-xs bg-field-cream text-stone-grey font-bold px-2 py-0.5 rounded-pill">⚡ Quick</span>
