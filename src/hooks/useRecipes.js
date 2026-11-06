@@ -20,6 +20,7 @@ export function useRecipes() {
         .select(`
           id, name, source_url, created_at,
           is_favorite, is_quick, is_easy,
+          is_shared, copied_from_recipe_id, copied_from_email,
           category:meal_categories(id, name),
           recipe_ingredients(
             ingredient:ingredients(id, name, store)
@@ -49,7 +50,7 @@ export function useRecipes() {
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  async function addRecipe({ name, categoryId, ingredientIds, sourceUrl, isFavorite = false, isQuick = false, isEasy = false }) {
+  async function addRecipe({ name, categoryId, ingredientIds, sourceUrl, isFavorite = false, isQuick = false, isEasy = false, copiedFromRecipeId = null, copiedFromEmail = null }) {
     const { data: recipe, error: recipeErr } = await supabase
       .from('recipes')
       .insert({
@@ -59,6 +60,8 @@ export function useRecipes() {
         is_favorite: isFavorite,
         is_quick: isQuick,
         is_easy: isEasy,
+        copied_from_recipe_id: copiedFromRecipeId,
+        copied_from_email: copiedFromEmail,
         user_email: email,
       })
       .select('id')
