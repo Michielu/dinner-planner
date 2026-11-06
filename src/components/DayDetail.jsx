@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const SLOT_LABEL = {
   eating_out: '🍽️ Eating Out',
@@ -13,10 +13,28 @@ const FLAGS = [
 
 const MEAL_TYPES = new Set(['recipe', 'eating_out', 'flex'])
 
-export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd, onRemove, onClose, ingredients = [], stores = [], onCreateIngredient }) {
+export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd, onRemove, onClose, ingredients = [], stores = [], onCreateIngredient, note = '', onNoteChange }) {
   const [mode, setMode] = useState(null) // null | 'meal' | 'ingredient' | 'mealAction'
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [noteText, setNoteText] = useState(note)
+
+  // Save the note shortly after typing stops, and on close so nothing is lost
+  const noteRef = useRef({ text: note, saved: note, onNoteChange })
+  noteRef.current.text = noteText
+  noteRef.current.onNoteChange = onNoteChange
+  function flushNote() {
+    const n = noteRef.current
+    if (n.text !== n.saved) {
+      n.saved = n.text
+      n.onNoteChange?.(n.text)
+    }
+  }
+  useEffect(() => {
+    const t = setTimeout(flushNote, 600)
+    return () => clearTimeout(t)
+  }, [noteText])
+  useEffect(() => flushNote, [])
   const [filterCategory, setFilterCategory] = useState('all')
   const [search, setSearch] = useState('')
   const [activeFlags, setActiveFlags] = useState(new Set())
@@ -209,6 +227,23 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
               >
                 + Add ingredient
               </button>
+            </div>
+
+            <div className="mx-4 border-t border-willow-mist" />
+
+            {/* Notes section */}
+            <div className="px-4 pt-4 pb-5">
+              <label htmlFor="day-note" className="block text-xs font-bold tracking-widest uppercase text-stone-grey mb-3">Notes</label>
+              <textarea
+                id="day-note"
+                value={noteText}
+                onChange={e => setNoteText(e.target.value)}
+                onBlur={flushNote}
+                rows={3}
+                placeholder="Soccer practice, eat early…"
+                className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 text-sm text-soil-shadow resize-none focus:outline-none focus:ring-2 focus:ring-fresh-herb"
+              />
+              <p className="mt-1 text-xs text-stone-grey/60">Cleared when you clear the week.</p>
             </div>
           </div>
         ) : mode === 'mealAction' && selectedSlot ? (

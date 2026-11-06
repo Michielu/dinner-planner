@@ -15,6 +15,7 @@ const DEFAULTS = {
   selectedStapleIds: [],
   pantryItems: [],
   addedIngredientIds: [],
+  dayNotes: {},
   phase: 'staples',
   visitedPhases: ['staples'],
 }
@@ -47,6 +48,7 @@ export function useWeekPlan() {
           selectedStapleIds: data.selected_staple_ids ?? [],
           pantryItems: data.pantry_items ?? [],
           addedIngredientIds: data.added_ingredient_ids ?? [],
+          dayNotes: data.day_notes ?? {},
           phase: VALID_PHASES.includes(data.phase) ? data.phase : 'plan',
           visitedPhases: (data.visited_phases ?? ['staples']).filter(p => VALID_PHASES.includes(p)),
         }
@@ -68,6 +70,7 @@ export function useWeekPlan() {
       selected_staple_ids: next.selectedStapleIds,
       pantry_items: next.pantryItems,
       added_ingredient_ids: next.addedIngredientIds,
+      day_notes: next.dayNotes,
       phase: next.phase,
       visited_phases: next.visitedPhases,
       updated_at: new Date().toISOString(),

@@ -8,9 +8,10 @@ const SLOT_SPECIAL = {
 /**
  * Props:
  *   slots: Record<string, slot[] | null>
+ *   notes: Record<string, string>
  *   onSlotClick: (day: string) => void
  */
-export function WeekGrid({ slots, onSlotClick }) {
+export function WeekGrid({ slots, notes = {}, onSlotClick }) {
   return (
     <div className="space-y-2">
       {DAYS.map(day => {
@@ -18,12 +19,13 @@ export function WeekGrid({ slots, onSlotClick }) {
         const slotArr = slots[key] ?? []
         const recipes = slotArr.filter(s => s.type === 'recipe')
         const special = slotArr.find(s => s.type === 'eating_out' || s.type === 'flex')
+        const note = notes[key]?.trim()
 
         return (
           <button
             key={day}
             onClick={() => onSlotClick(key)}
-            className="w-full flex items-center gap-4 bg-willow-mist rounded-2xl px-5 py-4 shadow-card hover:opacity-90 transition-opacity text-left"
+            className="w-full flex flex-wrap items-center gap-x-4 gap-y-1 bg-willow-mist rounded-2xl px-5 py-4 shadow-card hover:opacity-90 transition-opacity text-left"
           >
             <span className="w-24 text-sm text-stone-grey font-bold tracking-wide shrink-0">{day}</span>
             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -46,6 +48,9 @@ export function WeekGrid({ slots, onSlotClick }) {
                 <span className="text-sm text-stone-grey/50">+ pick meal</span>
               )}
             </div>
+            {note && (
+              <p className="basis-full pl-28 text-xs text-stone-grey truncate">📝 {note}</p>
+            )}
           </button>
         )
       })}

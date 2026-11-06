@@ -72,6 +72,13 @@ export default function PlannerPage() {
     if (updated.length === 0) setDetailDay(null)
   }
 
+  function handleNoteChange(day, text) {
+    const dayNotes = { ...plan.dayNotes }
+    if (text.trim()) dayNotes[day] = text
+    else delete dayNotes[day]
+    updatePlan({ dayNotes })
+  }
+
   async function handleCreateIngredient(name, store) {
     return findOrCreate(name, store)
   }
@@ -99,6 +106,8 @@ export default function PlannerPage() {
           ingredients={ingredients}
           stores={stores}
           onCreateIngredient={handleCreateIngredient}
+          note={plan.dayNotes[detailDay] ?? ''}
+          onNoteChange={text => handleNoteChange(detailDay, text)}
         />
       )}
 
@@ -130,7 +139,7 @@ export default function PlannerPage() {
             )}
           </div>
 
-          <WeekGrid slots={slots} onSlotClick={day => setDetailDay(day)} />
+          <WeekGrid slots={slots} notes={plan.dayNotes} onSlotClick={day => setDetailDay(day)} />
 
           <div className="mt-6 flex justify-end">
             <button
