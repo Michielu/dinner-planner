@@ -14,7 +14,9 @@ const FLAGS = [
 const MEAL_TYPES = new Set(['recipe', 'eating_out', 'flex'])
 
 export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd, onRemove, onClose, ingredients = [], stores = [], onCreateIngredient }) {
-  const [mode, setMode] = useState(null) // null | 'meal' | 'ingredient'
+  const [mode, setMode] = useState(null) // null | 'meal' | 'ingredient' | 'mealAction'
+  const [selectedIndex, setSelectedIndex] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [filterCategory, setFilterCategory] = useState('all')
   const [search, setSearch] = useState('')
   const [activeFlags, setActiveFlags] = useState(new Set())
@@ -80,7 +82,27 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
     setExpanded(false)
     setCreateStore(stores[0]?.value ?? '')
     setIsCreating(false)
+    setSelectedIndex(null)
+    setConfirmDelete(false)
   }
+
+  function handleSelectMeal(index) {
+    setSelectedIndex(index)
+    setConfirmDelete(false)
+    setMode('mealAction')
+  }
+
+  // First tap arms the button, second tap deletes — guards against accidental taps on mobile
+  function handleDeleteMeal() {
+    if (!confirmDelete) { setConfirmDelete(true); return }
+    onRemove(selectedIndex)
+    resetPicker()
+  }
+
+  const selectedSlot = selectedIndex !== null ? slots[selectedIndex] : null
+  const selectedSourceUrl = selectedSlot?.type === 'recipe'
+    ? recipes.find(r => r.id === selectedSlot.recipe?.id)?.source_url
+    : null
 
   function handlePickRecipe(slot) { onAdd(slot); resetPicker() }
   function handlePickIngredient(ing) {
@@ -139,28 +161,16 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
             <div className="px-4 pt-4 pb-3">
               <p className="text-xs font-bold tracking-widest uppercase text-stone-grey mb-3">Meals</p>
               <div className="space-y-2">
-                {mealSlots.map(s => {
-                  const sourceUrl = s.type === 'recipe'
-                    ? recipes.find(r => r.id === s.recipe?.id)?.source_url
-                    : null
-                  return (
-                    <div key={s._index}>
-                      <button
-                        onClick={() => onRemove(s._index)}
-                        className="flex items-center gap-1.5 bg-fresh-herb/30 hover:bg-red-100 text-soil-shadow hover:text-red-600 rounded-full px-3 py-2 text-sm font-bold transition-colors group"
-                      >
-                        {s.type === 'recipe' ? <span className="uppercase">{s.recipe?.name}</span> : SLOT_LABEL[s.type]}
-                        <span className="text-xs opacity-50 group-hover:opacity-100">✕</span>
-                      </button>
-                      {sourceUrl && (
-                        <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-                          className="block ml-3 mt-0.5 text-xs text-garden-patch hover:underline font-bold">
-                          Source ↗
-                        </a>
-                      )}
-                    </div>
-                  )
-                })}
+                {mealSlots.map(s => (
+                  <button
+                    key={s._index}
+                    onClick={() => handleSelectMeal(s._index)}
+                    className="flex items-center gap-1.5 bg-fresh-herb/30 hover:bg-fresh-herb/50 text-soil-shadow rounded-full px-3 py-2 text-sm font-bold transition-colors group"
+                  >
+                    {s.type === 'recipe' ? <span className="uppercase">{s.recipe?.name}</span> : SLOT_LABEL[s.type]}
+                    <span className="text-xs opacity-50 group-hover:opacity-100">›</span>
+                  </button>
+                ))}
                 {mealSlots.length === 0 && (
                   <p className="text-sm text-stone-grey/40 py-1">No meals yet</p>
                 )}
@@ -200,6 +210,40 @@ export function DayDetail({ day, slots, recipes, categories, pantryItems, onAdd,
                 + Add ingredient
               </button>
             </div>
+          </div>
+        ) : mode === 'mealAction' && selectedSlot ? (
+          <div className="px-4 pt-4 pb-5 space-y-3">
+            <p className="text-xs font-bold tracking-widest uppercase text-stone-grey">
+              {day} · {selectedSlot.type === 'recipe' ? 'Recipe' : 'Planned slot'}
+            </p>
+            <p className="font-display text-xl text-soil-shadow uppercase">
+              {selectedSlot.type === 'recipe' ? selectedSlot.recipe?.name : SLOT_LABEL[selectedSlot.type]}
+            </p>
+            {selectedSourceUrl ? (
+              <a href={selectedSourceUrl} target="_blank" rel="noopener noreferrer"
+                className="block w-full text-center bg-garden-patch text-field-cream rounded-2xl py-3.5 text-sm font-bold hover:opacity-90 transition-opacity">
+                Go to source ↗
+              </a>
+            ) : (
+              <p className="w-full text-center bg-willow-mist text-stone-grey rounded-2xl py-3.5 text-sm font-bold">
+                No source saved
+              </p>
+            )}
+            <div className="pt-4">
+              <button
+                onClick={handleDeleteMeal}
+                className={`w-full rounded-2xl py-3.5 text-sm font-bold border-2 transition-colors ${
+                  confirmDelete
+                    ? 'bg-red-600 border-red-600 text-white'
+                    : 'border-red-400/60 text-red-500 hover:bg-red-500/10'
+                }`}
+              >
+                {confirmDelete ? 'Tap again to delete' : 'Delete meal'}
+              </button>
+            </div>
+            <button onClick={resetPicker} className="w-full py-2 text-sm text-stone-grey hover:text-soil-shadow">
+              Cancel
+            </button>
           </div>
         ) : mode === 'meal' ? (
           <>
