@@ -14,6 +14,7 @@ export default function RecipesPage() {
   const [mode, setMode] = useState(null) // null | 'add' | 'import' | {edit: recipe}
   const [filterCategory, setFilterCategory] = useState('all')
   const [activeFlags, setActiveFlags] = useState(new Set())
+  const [search, setSearch] = useState('')
 
   function toggleFlagFilter(flag) {
     setActiveFlags(prev => {
@@ -23,7 +24,12 @@ export default function RecipesPage() {
     })
   }
 
+  const query = search.trim().toLowerCase()
+
   const displayed = recipes
+    .filter(r => !query
+      || r.name.toLowerCase().includes(query)
+      || r.ingredients.some(i => i.name.toLowerCase().includes(query)))
     .filter(r => filterCategory === 'all' || r.category?.id === filterCategory)
     .filter(r => !activeFlags.has('favorite') || r.is_favorite)
     .filter(r => !activeFlags.has('quick')    || r.is_quick)
@@ -125,6 +131,27 @@ export default function RecipesPage() {
         </div>
       )}
 
+      {/* Search */}
+      <div className="relative mb-3">
+        <input
+          type="search"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search recipes or ingredients…"
+          className="w-full border border-willow-mist rounded-2xl bg-field-cream px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-fresh-herb [&::-webkit-search-cancel-button]:hidden"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-grey hover:text-soil-shadow text-lg leading-none p-1"
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
       {/* Flag filters */}
       <div className="flex gap-2 mb-3">
         {[
@@ -167,7 +194,7 @@ export default function RecipesPage() {
       {displayed.length === 0 && (
         <div className="text-center py-16 text-stone-grey">
           <p className="text-4xl mb-3">🍳</p>
-          <p>{recipes.length === 0 ? 'No recipes yet. Add your first one!' : 'No recipes match the active filters.'}</p>
+          <p>{recipes.length === 0 ? 'No recipes yet. Add your first one!' : query ? `No recipes match "${search.trim()}".` : 'No recipes match the active filters.'}</p>
         </div>
       )}
 
